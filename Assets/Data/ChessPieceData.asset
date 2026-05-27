@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 109fda2ad636f3940bd55eef2f06742a, type: 3}
+  m_Name: ChessPieceData
+  m_EditorClassIdentifier: Assembly-CSharp::ChessPieceSO
+  pieces:
+  - type: 1
+    team: 1
+    prefab: {fileID: 1881032549562082246, guid: f4792939641172748b3057e62cc4bdea, type: 3}
+  - type: 1
+    team: 2
+    prefab: {fileID: 340353803143056796, guid: 25f249b4137c13c4380245d9f9b12257, type: 3}
+  - type: 2
+    team: 1
+    prefab: {fileID: 2538055699939164979, guid: 09fed2a902390344eb8b19f695be404b, type: 3}
+  - type: 2
+    team: 2
+    prefab: {fileID: 1656379417642048087, guid: b8d66c2808f04764497db1e55d96ad7c, type: 3}
+  - type: 3
+    team: 1
+    prefab: {fileID: 3217563412818553064, guid: f63ab3384c785ef48a0dff79d4ad5074, type: 3}
+  - type: 3
+    team: 2
+    prefab: {fileID: 3940804426470655797, guid: b5a1c6679c6299a44a3e725f702e5b20, type: 3}
+  - type: 4
+    team: 1
+    prefab: {fileID: 5758253689341402458, guid: 74052486511f14948a4cae6d26b707c6, type: 3}
+  - type: 4
+    team: 2
+    prefab: {fileID: 4153006151797219656, guid: 525d5baa67fcbf743802949e9ade90f6, type: 3}
+  - type: 5
+    team: 1
+    prefab: {fileID: 799461900071665519, guid: 677be3fc7edbac243bf417c55f51b9a2, type: 3}
+  - type: 5
+    team: 2
+    prefab: {fileID: 3532594049791186149, guid: 83ad1d16625a67d4aae6766fb254e2d2, type: 3}
+  - type: 6
+    team: 1
+    prefab: {fileID: 1440241693129278934, guid: 086957c33f9d5514183d07029e5f96a6, type: 3}
+  - type: 6
+    team: 2
+    prefab: {fileID: 9134016169671672063, guid: cb623681217516e49ae5d5f6bf0dca4a, type: 3}
