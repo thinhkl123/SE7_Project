@@ -10,6 +10,8 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
     public Image CardSprite;
     public Sprite BackSprite;
 
+    public bool CanClick { get; private set; } = true;
+
     public void SetCardData(UnoCardData data, bool isOpponent)
     {
         cardData = data;
@@ -23,11 +25,23 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
             CardSprite.sprite = BackSprite;
             return;
         }
-        CardSprite.sprite = UnoDeckManager.Instance.CardSO.GetSprite((CardColor)cardData.CardColor, (CardType)cardData.CardType, cardData.Value);
+        CardSprite.sprite = UnoManager.Instance.CardSO.GetSprite((CardColor)cardData.CardColor, (CardType)cardData.CardType, cardData.Value);
     }
 
     public void ExecuteCard()
     {
+        if (ChessManager.Instance.IsPlayerTurn() == false)
+        {
+            Debug.LogWarning("It's not the player's turn!");
+            return;
+        }
+
+        if (UnoManager.Instance.IsPlayerReleasedCard())
+        {
+            Debug.LogWarning("Player has already released a card this turn!");
+            return;
+        }
+
         Team playerTeam = ChessManager.Instance.GetPlayerTeam();
 
         switch ((CardType)cardData.CardType)
@@ -60,7 +74,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
 
     private void SetPlayerTurnCount(Team playerTeam, int count)
     {
-        UnoDeckManager.Instance.Rpc_SetTurnCount(cardData.ID, playerTeam, count);
+        UnoManager.Instance.Rpc_SetTurnCount(cardData, playerTeam, count);
     }
 
     private void ReverseAllChessPiece()
@@ -80,6 +94,9 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (!CanClick)
+            return;
+
         ExecuteCard();
     }
 
@@ -87,6 +104,34 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
     {
         Destroy(gameObject);
         // Implement logic to remove the card from the player's hand and update the game state
+    }
+
+    internal void UpdateActiveState(UnoCardData topCard)
+    {
+        if (IsPlayable(topCard))
+        {
+            CanClick = true;
+        }
+        else
+        {
+            CanClick = false;
+        }
+
+        Color tempColor = CardSprite.color;
+        tempColor.a = CanClick ? 1f : 0.5f;
+        CardSprite.color = tempColor;
+    }
+
+    private bool IsPlayable(UnoCardData topCard)
+    {
+        if (cardData.CardColor == topCard.CardColor || cardData.Value == topCard.Value)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 

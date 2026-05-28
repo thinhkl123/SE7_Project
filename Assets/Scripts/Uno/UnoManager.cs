@@ -1,9 +1,12 @@
 using Fusion;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class UnoDeckManager : NetworkBehaviour
+public class UnoManager : NetworkBehaviour
 {
-    public static UnoDeckManager Instance { get; private set; }
+    public static UnoManager Instance { get; private set; }
 
     private void Awake()
     {
@@ -19,10 +22,16 @@ public class UnoDeckManager : NetworkBehaviour
     public CardSO CardSO;
     public int InitialHandSize = 7;
 
-    [Header("UI")]
+    [Header("Player Card List")]
     public UnoCard CardPrefab;
     public RectTransform MyCardTf;
+    private List<UnoCard> myCardList = new List<UnoCard>();
     public RectTransform OpponentCardTf;
+
+    [Header("Card Deck")]
+    public Image TopCardImage;
+    public TextMeshProUGUI CardNumberLeft;
+    public Button DrawCardButton;
 
     [Header("Runtime")]
     [Networked] public int CardNumber { get; set; }
@@ -33,6 +42,26 @@ public class UnoDeckManager : NetworkBehaviour
     [Networked, Capacity(108)] public NetworkArray<UnoCardData> BlackHand => default;
     [Networked] public UnoCardData TopCard { get; set; }
     [Networked] public int NextCardID { get; set; }
+    [Networked] public bool IsReleasedCard { get; set; } = false;
+
+    private void Start()
+    {
+        DrawCardButton.onClick.AddListener(() =>
+        {
+            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+        });
+    }
+
+    public void SetIsReleasedCard(bool value)
+    {
+        if (Runner.IsServer)
+            IsReleasedCard = value;
+    }
+
+    public bool IsPlayerReleasedCard()
+    {
+        return IsReleasedCard;
+    }
 
     public void InitializeDeck()
     {
@@ -86,6 +115,7 @@ public class UnoDeckManager : NetworkBehaviour
             BlackCardCount = InitialHandSize;
 
             // Set the top card
+
             TopCard = CurrentDeck.Get(InitialHandSize * 2);
             NextCardID = InitialHandSize * 2 + 1;
 
@@ -93,8 +123,28 @@ public class UnoDeckManager : NetworkBehaviour
         }
     }
 
+    private void SetTopCard(UnoCardData cardData)
+    {
+        TopCard = cardData;
+        RenderTopCard();
+        UpdateActiveCard();
+        UpdateDrawCardButton();
+    }
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_RenderCard()
+    {
+        myCardList.Clear();
+
+        RenderCardList();
+
+        RenderTopCard();
+        UpdateActiveCard();
+        UpdateDrawCardButton();
+        UpdateCardNumberLeft();
+    }
+
+    private void RenderCardList()
     {
         if (ChessManager.Instance.GetPlayerTeam() == Team.White)
         {
@@ -123,16 +173,100 @@ public class UnoDeckManager : NetworkBehaviour
             {
                 UnoCard cardUI = Instantiate(CardPrefab, parentTf);
                 cardUI.SetCardData(cardData, isOpponent);
+
+                if (!isOpponent)
+                {
+                    myCardList.Add(cardUI);
+                }
             }
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void Rpc_SetTurnCount(int cardID, Team playerTeam, int count)
+    private void RenderTopCard()
     {
-        RemoveCard(cardID, playerTeam);
-        ChessManager.Instance.SetIsReleasedCard(true);
+        Sprite cardSprite = CardSO.GetSprite((CardColor)TopCard.CardColor, (CardType)TopCard.CardType, TopCard.Value);
+        TopCardImage.sprite = cardSprite;
+    }
+
+    private void UpdateActiveCard()
+    {
+        foreach (var card in myCardList)
+        {
+            card.UpdateActiveState(TopCard);
+        }
+    }
+
+    public void UpdateDrawCardButton()
+    {
+        if (ChessManager.Instance.IsPlayerTurn() == false)
+        {
+            DrawCardButton.interactable = false;
+            return;
+        }
+
+        if (NextCardID > CardNumber - 1)
+        {
+            DrawCardButton.interactable = false;
+            return;
+        }
+
+        foreach (var card in myCardList)
+        {
+            if (card.CanClick)
+            {
+                DrawCardButton.interactable = false;
+                return;
+            }
+        }
+
+        DrawCardButton.interactable = true;
+    }
+
+    public void UpdateCardNumberLeft()
+    {
+        int cardsLeft = CardNumber - NextCardID;
+        CardNumberLeft.text = cardsLeft.ToString();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_DrawCard(Team playerTeam)
+    {
+        if (NextCardID > CardNumber - 1)
+        {
+            Debug.LogWarning("No more cards to draw!");
+            return;
+        }
+
+        DrawCardButton.interactable = false;
+        UnoCardData drawnCard = CurrentDeck.Get(NextCardID - 1);
+
+        if (Runner.IsServer)
+        {
+            NextCardID++;
+        }
+
+        if (playerTeam == Team.White)
+        {
+            WhiteHand.Set(WhiteCardCount, drawnCard);
+            WhiteCardCount++;
+        }
+        else
+        {
+            BlackHand.Set(BlackCardCount, drawnCard);
+            BlackCardCount++;
+        }
+        RenderCardList();
+        UpdateActiveCard();
+        UpdateCardNumberLeft();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_SetTurnCount(UnoCardData cardData, Team playerTeam, int count)
+    {
+        RemoveCard(cardData.ID, playerTeam);
+        SetIsReleasedCard(true);
         ChessManager.Instance.SetTurnCount(count);
+        SetTopCard(cardData);
     }
 
     private void RemoveCard(int cardID, Team playerTeam)
@@ -182,7 +316,7 @@ public class UnoDeckManager : NetworkBehaviour
                 UnoCard cardUI = child.GetComponent<UnoCard>();
                 if (cardUI.cardData.ID == cardID)
                 {
-                    Destroy(child.gameObject);
+                    cardUI.DestroyCard();
                     break;
                 }
             }
@@ -194,7 +328,7 @@ public class UnoDeckManager : NetworkBehaviour
                 UnoCard cardUI = child.GetComponent<UnoCard>();
                 if (cardUI.cardData.ID == cardID)
                 {
-                    Destroy(child.gameObject);
+                    cardUI.DestroyCard();
                     break;
                 }
             }

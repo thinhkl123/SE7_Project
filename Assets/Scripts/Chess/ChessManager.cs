@@ -32,7 +32,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     [Header("Networked Variables")]
     [Networked] public int currentTurn { get; set; }
     [Networked] public bool IsGameActive { get; set; } = false;
-    [Networked] public bool IsReleasedCard { get; set; } = false;
     [Networked] public int TurnCount { get; set; }
 
     public bool IsGameActiveForPlayer()
@@ -69,12 +68,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     {
         if (Runner.IsServer)
             TurnCount = count;
-    }
-
-    public void SetIsReleasedCard(bool value)
-    {
-        if (Runner.IsServer)
-            IsReleasedCard = value;
     }
 
     public override void Spawned()
@@ -232,7 +225,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             currentTurn = (currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White;
             turnStartTime = Runner.SimulationTime;
             SetTurnCount(0);
-            SetIsReleasedCard(false);
+            UnoManager.Instance.SetIsReleasedCard(false);
+            UnoManager.Instance.UpdateDrawCardButton();
         }
     }
 
@@ -332,7 +326,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
                 InitChessGame();
 
-                UnoDeckManager.Instance.InitializeDeck();
+                UnoManager.Instance.InitializeDeck();
 
                 Debug.Log("Hai người chơi đã sẵn sàng. Trò chơi bắt đầu!");
             }

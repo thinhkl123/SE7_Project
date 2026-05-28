@@ -84,7 +84,7 @@ public class NetworkObjectManager : NetworkBehaviour, IPlayerJoined
 
                 ChessManager.Instance.InitChessGame();
 
-                UnoDeckManager.Instance.InitializeDeck();
+                UnoManager.Instance.InitializeDeck();
 
                 Debug.Log("Hai người chơi đã sẵn sàng. Trò chơi bắt đầu!");
             }
