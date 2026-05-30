@@ -269,6 +269,25 @@ public class UnoManager : NetworkBehaviour
         SetTopCard(cardData);
     }
 
+    public void ReverserCard()
+    {
+        if (Runner.IsServer)
+        {
+            int maxCount = Mathf.Max(WhiteCardCount, BlackCardCount);
+
+            for (int i = 0; i < maxCount; i++)
+            {
+                UnoCardData temp = WhiteHand[i];
+                WhiteHand.Set(i, CurrentDeck[i]);
+                CurrentDeck.Set(i, temp);
+            }
+
+            int tempCount = WhiteCardCount;
+            WhiteCardCount = BlackCardCount;
+            BlackCardCount = tempCount;
+        }
+    }
+
     private void RemoveCard(int cardID, Team playerTeam)
     {
         if (Runner.IsServer)

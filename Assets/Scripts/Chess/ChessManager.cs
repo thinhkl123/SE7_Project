@@ -110,6 +110,35 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         turnText.text = $"Turn: {TurnCount}";
     }
 
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_SwitchTeam()
+    {
+        if (Runner.IsServer)
+        {
+            currentTurn = (currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White;
+        }
+
+        SetPlayerTeam((myTeam == Team.White) ? Team.Black : Team.White);
+        ReRenderChessBoard();
+
+        UnoManager.Instance.ReverserCard();
+        SwitchTurn();
+    }    
+
+    private void ReRenderChessBoard()
+    {
+        for (int x = 0; x < ChessBoard.Instance.BoardSize.x; x++)
+        {
+            for (int y = 0; y < ChessBoard.Instance.BoardSize.y; y++)
+            {
+                if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
+                {
+                    chessPieces[x + y * ChessBoard.Instance.BoardSize.x].SetPosition(x, y);
+                }
+            }
+        }
+    }
+
     public void ProcessPiece(Vector2Int hitPosition)
     {
         if (currentlyDragging == null)

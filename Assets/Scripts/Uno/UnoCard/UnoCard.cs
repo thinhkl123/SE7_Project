@@ -79,7 +79,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
 
     private void ReverseAllChessPiece()
     {
-        // Implement logic to reverse all chess pieces on the board
+        ChessManager.Instance.Rpc_SwitchTeam();
     }
 
     public void ChangeColor()
