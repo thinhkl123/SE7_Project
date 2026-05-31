@@ -132,7 +132,7 @@ public class UnoManager : NetworkBehaviour
 
         RenderTopCard();
         UpdateActiveCard();
-        UpdateDrawCardButton();
+        Rpc_UpdateDrawCardButton();
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
@@ -140,28 +140,28 @@ public class UnoManager : NetworkBehaviour
     {
         myCardList.Clear();
 
-        RenderCardList();
+        RenderAllCardList();
 
         RenderTopCard();
         UpdateActiveCard();
-        UpdateDrawCardButton();
+        Rpc_UpdateDrawCardButton();
     }
 
-    private void RenderCardList()
+    private void RenderAllCardList()
     {
         if (ChessManager.Instance.GetPlayerTeam() == Team.White)
         {
-            RenderHand(WhiteHand, WhiteCardCount, MyCardTf, false);
-            RenderHand(BlackHand, BlackCardCount, OpponentCardTf, true);
+            RenderAllHand(WhiteHand, WhiteCardCount, MyCardTf, false);
+            RenderAllHand(BlackHand, BlackCardCount, OpponentCardTf, true);
         }
         else
         {
-            RenderHand(BlackHand, BlackCardCount, MyCardTf, false);
-            RenderHand(WhiteHand, WhiteCardCount, OpponentCardTf, true);
+            RenderAllHand(BlackHand, BlackCardCount, MyCardTf, false);
+            RenderAllHand(WhiteHand, WhiteCardCount, OpponentCardTf, true);
         }
     }
 
-    private void RenderHand(NetworkArray<UnoCardData> hand, int length, RectTransform parentTf, bool isOpponent)
+    private void RenderAllHand(NetworkArray<UnoCardData> hand, int length, RectTransform parentTf, bool isOpponent)
     {
         // Clear existing cards
         foreach (Transform child in parentTf)
@@ -185,6 +185,16 @@ public class UnoManager : NetworkBehaviour
         }
     }
 
+    private void RenderAddCard(UnoCardData cardData, RectTransform parentTf, bool isOpponent)
+    {
+        UnoCard cardUI = Instantiate(CardPrefab, parentTf);
+        cardUI.SetCardData(cardData, isOpponent);
+        if (!isOpponent)
+        {
+            myCardList.Add(cardUI);
+        }
+    }
+
     private void RenderTopCard()
     {
         Sprite cardSprite = CardSO.GetSprite((CardColor)TopCard.CardColor, (CardType)TopCard.CardType, TopCard.Value);
@@ -199,7 +209,8 @@ public class UnoManager : NetworkBehaviour
         }
     }
 
-    public void UpdateDrawCardButton()
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_UpdateDrawCardButton()
     {
         if (ChessManager.Instance.IsPlayerTurn() == false)
         {
@@ -213,9 +224,9 @@ public class UnoManager : NetworkBehaviour
             return;
         }
 
-        if (NextCardID > CardNumber - 1)
+        if (myCardList.Count <= 0)
         {
-            DrawCardButton.interactable = false;
+            DrawCardButton.interactable = true;
             return;
         }
 
@@ -259,7 +270,9 @@ public class UnoManager : NetworkBehaviour
             BlackHand.Set(BlackCardCount, drawnCard);
             BlackCardCount++;
         }
-        RenderCardList();
+        RenderAddCard(drawnCard, 
+            playerTeam == ChessManager.Instance.GetPlayerTeam() ? MyCardTf : OpponentCardTf,
+            playerTeam != ChessManager.Instance.GetPlayerTeam());
         UpdateActiveCard();
     }
 
@@ -341,6 +354,17 @@ public class UnoManager : NetworkBehaviour
         SetIsReleasedCard(true);
         SetTopCard(newTopCard);
         ChessManager.Instance.SwitchTurn();
+    }
+
+    public void ReleaseAddCard(UnoCardData cardData, Team playerTeam, int count)
+    {
+        RemoveCard(cardData, playerTeam);
+        SetIsReleasedCard(true);
+        SetTopCard(cardData);
+        for (int i = 0; i < count; i++)
+        {
+            Rpc_DrawCard(playerTeam, false);
+        }
     }
 
     private void RemoveCard(UnoCardData cardData, Team playerTeam)

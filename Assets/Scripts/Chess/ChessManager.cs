@@ -89,8 +89,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
         if (timeRemaining <= 0)
         {
-            if (Runner.IsServer)
-                SwitchTurn();
+            SwitchTurn();
         }
 
         //Debug.Log($"[FixedUpdateNetwork] Time Remaining: {timeRemaining}");
@@ -248,8 +247,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             turnStartTime = Runner.SimulationTime;
             SetTurnCount(0);
             UnoManager.Instance.SetIsReleasedCard(false);
+            UnoManager.Instance.Rpc_UpdateDrawCardButton();
         }
-        UnoManager.Instance.UpdateDrawCardButton();
     }
 
     private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)

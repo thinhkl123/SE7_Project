@@ -63,7 +63,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
 
                 break;
             case CardType.Add:
-                AddCardForPlayer(playerTeam, cardData.Value);
+                ReleaseAddCard(playerTeam, cardData.Value);
 
                 break;
             default:
@@ -87,9 +87,9 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
         UnoManager.Instance.ReleaseChangeColorCard(cardData, playerTeam);
     }
 
-    public void AddCardForPlayer(Team playerTeam, int cardCount)
+    public void ReleaseAddCard(Team playerTeam, int cardCount)
     {
-        // Implement logic to add cards to the player's hand
+        UnoManager.Instance.ReleaseAddCard(cardData, playerTeam, cardCount);
     }
 
     public void OnPointerClick(PointerEventData eventData)
