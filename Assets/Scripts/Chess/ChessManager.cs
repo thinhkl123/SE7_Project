@@ -205,18 +205,15 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         }
         ChessBoard.Instance.ClearHighlights();
 
-        if (Runner.IsServer)
+        if (TurnCount - 1 <= 0)
         {
-            if (TurnCount - 1 <= 0)
-            {
-                Debug.Log("Chuyển lượt!");
-                SwitchTurn();
-            }
-            else
-            {
-                Debug.Log($"Còn {TurnCount - 1} lượt nữa trước khi chuyển lượt!");
-                SetTurnCount(TurnCount - 1);
-            }
+            Debug.Log("Chuyển lượt!");
+            SwitchTurn();
+        }
+        else
+        {
+            Debug.Log($"Còn {TurnCount - 1} lượt nữa trước khi chuyển lượt!");
+            SetTurnCount(TurnCount - 1);
         }
     }
 

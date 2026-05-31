@@ -207,6 +207,12 @@ public class UnoManager : NetworkBehaviour
             return;
         }
 
+        if (IsPlayerReleasedCard())
+        {
+            DrawCardButton.interactable = false;
+            return;
+        }
+
         if (NextCardID > CardNumber - 1)
         {
             DrawCardButton.interactable = false;

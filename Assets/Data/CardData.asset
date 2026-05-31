@@ -41,25 +41,25 @@ MonoBehaviour:
     type: 1
     sprite: {fileID: 506292471, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 3
-    amount: 2
+    amount: 0
     description: 
   - color: 3
     type: 1
     sprite: {fileID: 851495575, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 4
-    amount: 2
+    amount: 0
     description: 
   - color: 1
     type: 2
     sprite: {fileID: -693803687, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
-    amount: 2
+    amount: 0
     description: 
   - color: 5
     type: 3
     sprite: {fileID: -303975108, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
-    amount: 10
+    amount: 0
     description: 
   - color: 1
     type: 3
