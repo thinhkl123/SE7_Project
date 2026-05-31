@@ -110,8 +110,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         turnText.text = $"Turn: {TurnCount}";
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void Rpc_SwitchTeam()
+    public void SwitchTeam()
     {
         if (Runner.IsServer)
         {
@@ -120,9 +119,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
         SetPlayerTeam((myTeam == Team.White) ? Team.Black : Team.White);
         ReRenderChessBoard();
-
-        UnoManager.Instance.ReverserCard();
-        SwitchTurn();
     }    
 
     private void ReRenderChessBoard()
@@ -255,8 +251,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             turnStartTime = Runner.SimulationTime;
             SetTurnCount(0);
             UnoManager.Instance.SetIsReleasedCard(false);
-            UnoManager.Instance.UpdateDrawCardButton();
         }
+        UnoManager.Instance.UpdateDrawCardButton();
     }
 
     private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)

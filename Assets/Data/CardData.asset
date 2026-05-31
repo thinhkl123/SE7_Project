@@ -53,5 +53,35 @@ MonoBehaviour:
     type: 2
     sprite: {fileID: -693803687, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
+    amount: 2
+    description: 
+  - color: 5
+    type: 3
+    sprite: {fileID: -303975108, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 0
     amount: 10
+    description: 
+  - color: 1
+    type: 3
+    sprite: {fileID: 605965157990905440, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 0
+    amount: 0
+    description: 
+  - color: 2
+    type: 3
+    sprite: {fileID: -956179389, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 0
+    amount: 0
+    description: 
+  - color: 3
+    type: 3
+    sprite: {fileID: -1587721087, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 0
+    amount: 0
+    description: 
+  - color: 4
+    type: 3
+    sprite: {fileID: -1934314042, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 0
+    amount: 0
     description: 

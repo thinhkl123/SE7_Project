@@ -30,7 +30,6 @@ public class UnoManager : NetworkBehaviour
 
     [Header("Card Deck")]
     public Image TopCardImage;
-    public TextMeshProUGUI CardNumberLeft;
     public Button DrawCardButton;
 
     [Header("Runtime")]
@@ -40,6 +39,8 @@ public class UnoManager : NetworkBehaviour
     [Networked, Capacity(108)] public NetworkArray<UnoCardData> WhiteHand => default;
     [Networked] public int BlackCardCount { get; set; }
     [Networked, Capacity(108)] public NetworkArray<UnoCardData> BlackHand => default;
+    [Networked] public int ReleaseCardCount { get; set; }
+    [Networked, Capacity(108)] public NetworkArray<UnoCardData> ReleaseCardDeck => default;
     [Networked] public UnoCardData TopCard { get; set; }
     [Networked] public int NextCardID { get; set; }
     [Networked] public bool IsReleasedCard { get; set; } = false;
@@ -70,6 +71,7 @@ public class UnoManager : NetworkBehaviour
             Debug.Log("Initializing Uno Deck");
 
             CardNumber = 0;
+            ReleaseCardCount = 0;
 
             // Initialize the deck with cards from CardSO
             for (int i = 0; i < CardSO.cards.Length; i++)
@@ -125,7 +127,9 @@ public class UnoManager : NetworkBehaviour
 
     private void SetTopCard(UnoCardData cardData)
     {
-        TopCard = cardData;
+        if (Runner.IsServer)
+            TopCard = cardData;
+
         RenderTopCard();
         UpdateActiveCard();
         UpdateDrawCardButton();
@@ -141,7 +145,6 @@ public class UnoManager : NetworkBehaviour
         RenderTopCard();
         UpdateActiveCard();
         UpdateDrawCardButton();
-        UpdateCardNumberLeft();
     }
 
     private void RenderCardList()
@@ -222,22 +225,17 @@ public class UnoManager : NetworkBehaviour
         DrawCardButton.interactable = true;
     }
 
-    public void UpdateCardNumberLeft()
-    {
-        int cardsLeft = CardNumber - NextCardID;
-        CardNumberLeft.text = cardsLeft.ToString();
-    }
-
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void Rpc_DrawCard(Team playerTeam)
+    public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
         if (NextCardID > CardNumber - 1)
         {
-            Debug.LogWarning("No more cards to draw!");
-            return;
+            ShuffleCardDeckAgain();
         }
+        
+        if (isOneTime)
+            DrawCardButton.interactable = false;
 
-        DrawCardButton.interactable = false;
         UnoCardData drawnCard = CurrentDeck.Get(NextCardID - 1);
 
         if (Runner.IsServer)
@@ -257,19 +255,49 @@ public class UnoManager : NetworkBehaviour
         }
         RenderCardList();
         UpdateActiveCard();
-        UpdateCardNumberLeft();
+    }
+
+    private void ShuffleCardDeckAgain()
+    {
+        for (int i = ReleaseCardCount - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            UnoCardData temp = ReleaseCardDeck.Get(i);
+            ReleaseCardDeck.Set(i, ReleaseCardDeck.Get(j));
+            ReleaseCardDeck.Set(j, temp);
+        }
+
+        for (int i = 0; i < ReleaseCardCount; i++)
+        {
+            CurrentDeck.Set(i, ReleaseCardDeck.Get(i));
+        }
+
+        CardNumber = ReleaseCardCount;
+        ReleaseCardCount = 0;
+        NextCardID = 0;
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void Rpc_SetTurnCount(UnoCardData cardData, Team playerTeam, int count)
+    public void Rpc_ReleaseMoveCard(UnoCardData cardData, Team playerTeam, int count)
     {
-        RemoveCard(cardData.ID, playerTeam);
+        RemoveCard(cardData, playerTeam);
         SetIsReleasedCard(true);
         ChessManager.Instance.SetTurnCount(count);
         SetTopCard(cardData);
     }
 
-    public void ReverserCard()
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_ReleaseReverseCard(UnoCardData cardData, Team playerTeam)
+    {
+        RemoveCard(cardData, playerTeam);
+        SetIsReleasedCard(true);
+        ReverserCard();
+        ChessManager.Instance.SwitchTeam();
+        ChessManager.Instance.SwitchTurn();
+        SetTopCard(TopCard);
+    }
+
+    private void ReverserCard()
     {
         if (Runner.IsServer)
         {
@@ -288,15 +316,39 @@ public class UnoManager : NetworkBehaviour
         }
     }
 
-    private void RemoveCard(int cardID, Team playerTeam)
+    public void ReleaseChangeColorCard(UnoCardData cardData, Team playerTeam)
+    {
+        RemoveCard(cardData, playerTeam);
+        UIManager.Instance.OpenUI<ChooseColorUI>();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_ChangeColorCard(CardColor newColor)
+    {
+        UnoCardData newTopCard = new UnoCardData
+        {
+            ID = TopCard.ID,
+            CardType = (int)CardType.ChangeColor,
+            CardColor = (int)newColor,
+            Value = 0,
+        };
+        SetIsReleasedCard(true);
+        SetTopCard(newTopCard);
+        ChessManager.Instance.SwitchTurn();
+    }
+
+    private void RemoveCard(UnoCardData cardData, Team playerTeam)
     {
         if (Runner.IsServer)
         {
+            ReleaseCardCount++;
+            ReleaseCardDeck.Set(ReleaseCardCount - 1, cardData);
+
             if (playerTeam == Team.White)
             {
                 for (int i = 0; i < WhiteCardCount; i++)
                 {
-                    if (WhiteHand.Get(i).ID == cardID)
+                    if (WhiteHand.Get(i).ID == cardData.ID)
                     {
                         // Shift cards down
                         for (int j = i; j < WhiteCardCount - 1; j++)
@@ -313,7 +365,7 @@ public class UnoManager : NetworkBehaviour
             {
                 for (int i = 0; i < BlackCardCount; i++)
                 {
-                    if (BlackHand.Get(i).ID == cardID)
+                    if (BlackHand.Get(i).ID == cardData.ID)
                     {
                         // Shift cards down
                         for (int j = i; j < BlackCardCount - 1; j++)
@@ -333,7 +385,7 @@ public class UnoManager : NetworkBehaviour
             foreach (Transform child in MyCardTf)
             {
                 UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardID)
+                if (cardUI.cardData.ID == cardData.ID)
                 {
                     cardUI.DestroyCard();
                     break;
@@ -345,12 +397,17 @@ public class UnoManager : NetworkBehaviour
             foreach (Transform child in OpponentCardTf)
             {
                 UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardID)
+                if (cardUI.cardData.ID == cardData.ID)
                 {
                     cardUI.DestroyCard();
                     break;
                 }
             }
+        }
+
+        if (playerTeam == ChessManager.Instance.GetPlayerTeam())
+        {
+            myCardList.RemoveAll(card => card.cardData.ID == cardData.ID);
         }
     }
 }

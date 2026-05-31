@@ -47,15 +47,15 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
         switch ((CardType)cardData.CardType)
         {
             case CardType.Move:
-                SetPlayerTurnCount(playerTeam, cardData.Value);
+                ReleaseMoveCard(playerTeam, cardData.Value);
 
                 break;
             case CardType.Reverse:
-                ReverseAllChessPiece();
+                ReverseAllChessPiece(playerTeam);
 
                 break;
             case CardType.ChangeColor:
-                ChangeColor();
+                ReleaseChangeColorCard(playerTeam);
 
                 break;
             case CardType.Block:
@@ -72,19 +72,19 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    private void SetPlayerTurnCount(Team playerTeam, int count)
+    private void ReleaseMoveCard(Team playerTeam, int count)
     {
-        UnoManager.Instance.Rpc_SetTurnCount(cardData, playerTeam, count);
+        UnoManager.Instance.Rpc_ReleaseMoveCard(cardData, playerTeam, count);
     }
 
-    private void ReverseAllChessPiece()
+    private void ReverseAllChessPiece(Team playerTeam)
     {
-        ChessManager.Instance.Rpc_SwitchTeam();
+        UnoManager.Instance.Rpc_ReleaseReverseCard(cardData, playerTeam);
     }
 
-    public void ChangeColor()
+    public void ReleaseChangeColorCard(Team playerTeam)
     {
-        // Implement logic to change the current color in play
+        UnoManager.Instance.ReleaseChangeColorCard(cardData, playerTeam);
     }
 
     public void AddCardForPlayer(Team playerTeam, int cardCount)
@@ -124,6 +124,11 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
 
     private bool IsPlayable(UnoCardData topCard)
     {
+        if (cardData.CardColor == (int)CardColor.Black || topCard.CardColor == (int)CardColor.Black)
+        {
+            return true;
+        }
+
         if (cardData.CardColor == topCard.CardColor || cardData.Value == topCard.Value)
         {
             return true;
