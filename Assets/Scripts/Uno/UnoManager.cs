@@ -1,5 +1,7 @@
+using DG.Tweening;
 using Fusion;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +31,7 @@ public class UnoManager : NetworkBehaviour
     public RectTransform OpponentCardTf;
 
     [Header("Card Deck")]
+    public RectTransform DeckPoint;
     public Image TopCardImage;
     public Button DrawCardButton;
 
@@ -149,32 +152,118 @@ public class UnoManager : NetworkBehaviour
 
     private void RenderAllCardList()
     {
-        if (ChessManager.Instance.GetPlayerTeam() == Team.White)
+        DealCards();
+    }
+
+    public void DealCards()
+    {
+        Sequence seq = DOTween.Sequence();
+
+        for (int i = 0; i < MyCardTf.childCount; i++)
         {
-            RenderAllHand(WhiteHand, WhiteCardCount, MyCardTf, false);
-            RenderAllHand(BlackHand, BlackCardCount, OpponentCardTf, true);
+            Destroy(MyCardTf.GetChild(i).gameObject);
         }
-        else
+
+        for (int i = 0; i < OpponentCardTf.childCount; i++)
         {
-            RenderAllHand(BlackHand, BlackCardCount, MyCardTf, false);
-            RenderAllHand(WhiteHand, WhiteCardCount, OpponentCardTf, true);
+            Destroy(OpponentCardTf.GetChild(i).gameObject);
         }
+
+        for (int i = 0; i < InitialHandSize; i++)
+        {
+            int index = i;
+
+            seq.AppendCallback(() =>
+            {
+                DealOneCard(MyCardTf);
+            });
+
+            seq.AppendInterval(0.08f);
+
+            seq.AppendCallback(() =>
+            {
+                DealOneCard(OpponentCardTf);
+            });
+
+            seq.AppendInterval(0.08f);
+        }
+        seq.OnComplete(() =>
+        {
+            if (ChessManager.Instance.GetPlayerTeam() == Team.White)
+            {
+                RenderAllHand(WhiteHand, WhiteCardCount, MyCardTf, false);
+                RenderAllHand(BlackHand, BlackCardCount, OpponentCardTf, true);
+            }
+            else
+            {
+                RenderAllHand(BlackHand, BlackCardCount, MyCardTf, false);
+                RenderAllHand(WhiteHand, WhiteCardCount, OpponentCardTf, true);
+            }
+
+            RefreshHand(MyCardTf);
+            RefreshHand(OpponentCardTf);
+        });
+    }
+
+    public void RefreshHand(Transform hand)
+    {
+        float spacing = 90f;
+
+        int count = hand.childCount;
+
+        float totalWidth =
+            (count - 1) * spacing;
+
+        float startX =
+            -totalWidth / 2f;
+
+        for (int i = 0; i < count; i++)
+        {
+            RectTransform card =
+                hand.GetChild(i)
+                    .GetComponent<RectTransform>();
+
+            Vector3 targetPos =
+                new(startX + i * spacing, 0, 0);
+
+            card.DOLocalMove(
+                targetPos,
+                0.25f
+            );
+
+            card.DOLocalRotate(
+                Vector3.zero,
+                0.25f
+            );
+        }
+    }
+
+    private void DealOneCard(Transform hand)
+    {
+        var card = Instantiate(CardPrefab, DeckPoint.parent);
+
+        RectTransform cardRect = card.GetComponent<RectTransform>();
+
+        cardRect.position = DeckPoint.position;
+        cardRect.localScale = Vector3.one * 0.7f;
+
+        card.transform.SetParent(hand);
+
+        cardRect.DOScale(1f, 0.25f);
+
+        cardRect
+            .DOLocalMove(Vector3.zero, 0.3f)
+            .SetEase(Ease.OutCubic);
     }
 
     private void RenderAllHand(NetworkArray<UnoCardData> hand, int length, RectTransform parentTf, bool isOpponent)
     {
-        // Clear existing cards
-        foreach (Transform child in parentTf)
-        {
-            Destroy(child.gameObject);
-        }
-        // Instantiate new card UI elements
         for (int i = 0; i < length; i++)
         {
             UnoCardData cardData = hand.Get(i);
-            if (cardData.ID != -1) // Assuming -1 means empty slot
+            if (cardData.ID != -1) 
             {
-                UnoCard cardUI = Instantiate(CardPrefab, parentTf);
+                UnoCard cardUI = parentTf.GetChild(i).GetComponent<UnoCard>();
                 cardUI.SetCardData(cardData, isOpponent);
 
                 if (!isOpponent)
@@ -197,8 +286,28 @@ public class UnoManager : NetworkBehaviour
 
     private void RenderTopCard()
     {
-        Sprite cardSprite = CardSO.GetSprite((CardColor)TopCard.CardColor, (CardType)TopCard.CardType, TopCard.Value);
-        TopCardImage.sprite = cardSprite;
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(
+            TopCardImage.rectTransform
+                .DOScaleX(0, 0.15f)
+                .SetEase(Ease.InBack)
+        );
+
+        seq.AppendCallback(() =>
+        {
+            Sprite cardSprite = CardSO.GetSprite((CardColor)TopCard.CardColor, (CardType)TopCard.CardType, TopCard.Value);
+            TopCardImage.sprite = cardSprite;
+        });
+
+        seq.Append(
+            TopCardImage.rectTransform
+                .DOScaleX(1, 0.15f)
+                .SetEase(Ease.OutBack)
+        );
+
+        //Sprite cardSprite = CardSO.GetSprite((CardColor)TopCard.CardColor, (CardType)TopCard.CardType, TopCard.Value);
+        //TopCardImage.sprite = cardSprite;
     }
 
     private void UpdateActiveCard()
@@ -418,6 +527,7 @@ public class UnoManager : NetworkBehaviour
                 if (cardUI.cardData.ID == cardData.ID)
                 {
                     cardUI.DestroyCard();
+                    RefreshHand(MyCardTf);
                     break;
                 }
             }
@@ -430,6 +540,7 @@ public class UnoManager : NetworkBehaviour
                 if (cardUI.cardData.ID == cardData.ID)
                 {
                     cardUI.DestroyCard();
+                    RefreshHand(OpponentCardTf);
                     break;
                 }
             }

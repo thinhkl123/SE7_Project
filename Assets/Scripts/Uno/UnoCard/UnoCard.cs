@@ -1,16 +1,26 @@
+using DG.Tweening;
 using Fusion;
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class UnoCard : MonoBehaviour, IPointerClickHandler
+public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public UnoCardData cardData;
     public Image CardSprite;
     public Sprite BackSprite;
 
     public bool CanClick { get; private set; } = true;
+
+    private bool isOpponentCard;
+    private Vector3 startScale;
+    private int childIndex;
+
+    private void Awake()
+    {
+        startScale = transform.localScale;
+    }
 
     public void SetCardData(UnoCardData data, bool isOpponent)
     {
@@ -20,6 +30,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
 
     private void UpdateCardVisual(bool isOpponet)
     {
+        isOpponentCard = isOpponet;
         if (isOpponet)
         {
             CardSprite.sprite = BackSprite;
@@ -98,6 +109,42 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler
             return;
 
         ExecuteCard();
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!CanClick)
+            return;
+
+        if (isOpponentCard)
+            return;
+
+        childIndex = transform.GetSiblingIndex();
+        transform.SetAsLastSibling();
+
+        transform.DOScale(startScale * 1.1f, 0.15f);
+
+        transform.DOLocalMoveY(
+            50f,
+            0.15f
+        );
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (!CanClick)
+            return;
+
+        if (isOpponentCard)
+            return;
+
+        transform.SetSiblingIndex(childIndex);
+        transform.DOScale(startScale, 0.15f);
+
+        transform.DOLocalMoveY(
+            0f,
+            0.15f
+        );
     }
 
     public void DestroyCard()

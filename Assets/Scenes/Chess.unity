@@ -1626,7 +1626,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 10}
+  m_AnchoredPosition: {x: 0, y: 90}
   m_SizeDelta: {x: 0, y: 150}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &302397255
@@ -1636,7 +1636,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 302397253}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
@@ -5283,10 +5283,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnoDeckManager
   CardSO: {fileID: 11400000, guid: 4feaccbf58508fb4aac1f2d4e4232d74, type: 2}
-  InitialHandSize: 3
+  InitialHandSize: 10
   CardPrefab: {fileID: 3748127431296698249, guid: e3a95189928d3374f986cafc9936ec1d, type: 3}
   MyCardTf: {fileID: 302397254}
   OpponentCardTf: {fileID: 1255970106}
+  DeckPoint: {fileID: 335434170}
   TopCardImage: {fileID: 1540275558}
   DrawCardButton: {fileID: 615661199}
   _CardNumber: 0
@@ -6697,7 +6698,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -90}
   m_SizeDelta: {x: 0, y: 150}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1255970107
@@ -6707,7 +6708,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1255970105}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
@@ -7689,6 +7690,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1379322154}
   - component: {fileID: 1379322155}
+  - component: {fileID: 1379322156}
   m_Layer: 0
   m_Name: NetworkHandler
   m_TagString: Untagged
@@ -7723,6 +7725,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d90e17cc0db1b248a4312a1ac280afb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkHandler
+--- !u!114 &1379322156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1379322153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 325acf9e4261ebb4fb743ae49873e877, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkDisconnectHandler
 --- !u!1 &1380927807
 GameObject:
   m_ObjectHideFlags: 0
