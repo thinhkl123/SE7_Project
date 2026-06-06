@@ -529,30 +529,28 @@ public class UnoManager : NetworkBehaviour
             }
         }
 
-        if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
+        RectTransform targetHandTf = playerTeam == ChessManager.Instance.GetPlayerTeam() ? MyCardTf : OpponentCardTf;
+
+        foreach (Transform child in targetHandTf)
         {
-            foreach (Transform child in MyCardTf)
+            UnoCard cardUI = child.GetComponent<UnoCard>();
+            if (cardUI.cardData.ID == cardData.ID)
             {
-                UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardData.ID)
-                {
-                    cardUI.DestroyCard();
-                    RefreshHand(MyCardTf);
-                    break;
-                }
-            }
-        }
-        else
-        {
-            foreach (Transform child in OpponentCardTf)
-            {
-                UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardData.ID)
-                {
-                    cardUI.DestroyCard();
-                    RefreshHand(OpponentCardTf);
-                    break;
-                }
+                // Move the card to the top card position before destroying
+                RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+                cardRect.SetParent(TopCardImage.rectTransform.parent);
+
+                // Ensure the card is on top of the UI
+                cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f)
+                    .SetEase(Ease.OutQuad)
+                    .OnComplete(() =>
+                    {
+                        cardUI.DestroyCard();                        
+                    });
+
+                // After the card is destroyed, refresh the hand to update the positions of remaining cards
+                RefreshHand(targetHandTf);
+                break;
             }
         }
 
