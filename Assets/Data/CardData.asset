@@ -88,6 +88,6 @@ MonoBehaviour:
   - color: 5
     type: 5
     sprite: {fileID: -1425833034, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
-    value: 1
-    amount: 2
+    value: 4
+    amount: 4
     description: 

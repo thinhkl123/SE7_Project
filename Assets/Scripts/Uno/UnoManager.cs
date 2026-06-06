@@ -282,6 +282,16 @@ public class UnoManager : NetworkBehaviour
         {
             myCardList.Add(cardUI);
         }
+
+        // Set the card's initial position to the deck point
+        RectTransform cardRest = cardUI.GetComponent<RectTransform>();
+        cardRest.position = DeckPoint.position;
+
+        // Scale and Rotation sure to be the same as other cards in hand
+        cardRest.localScale = Vector3.one;
+        cardRest.localRotation = Quaternion.identity;
+
+        RefreshHand(parentTf);
     }
 
     private void RenderTopCard()

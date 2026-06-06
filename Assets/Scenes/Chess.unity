@@ -5283,7 +5283,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnoDeckManager
   CardSO: {fileID: 11400000, guid: 4feaccbf58508fb4aac1f2d4e4232d74, type: 2}
-  InitialHandSize: 10
+  InitialHandSize: 6
   CardPrefab: {fileID: 3748127431296698249, guid: e3a95189928d3374f986cafc9936ec1d, type: 3}
   MyCardTf: {fileID: 302397254}
   OpponentCardTf: {fileID: 1255970106}
