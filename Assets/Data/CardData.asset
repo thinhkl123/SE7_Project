@@ -80,10 +80,10 @@ MonoBehaviour:
     amount: 0
     description: 
   - color: 4
-    type: 3
+    type: 4
     sprite: {fileID: -1934314042, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
-    amount: 0
+    amount: 2
     description: 
   - color: 5
     type: 5

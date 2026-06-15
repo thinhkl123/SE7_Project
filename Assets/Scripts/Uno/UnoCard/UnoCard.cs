@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using Fusion;
 using System;
 using UnityEngine;
@@ -70,7 +70,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
 
                 break;
             case CardType.Block:
-                
+
 
                 break;
             case CardType.Add:

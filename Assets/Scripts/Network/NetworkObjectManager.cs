@@ -40,25 +40,19 @@ public class NetworkObjectManager : NetworkBehaviour, IPlayerJoined
     public override void FixedUpdateNetwork()
     {
         if (!ChessManager.Instance.IsGameActive) return;
-
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
-
         if (timeRemaining <= 0)
         {
             ChessManager.Instance.SwitchTurn();
         }
-
         //Debug.Log($"[FixedUpdateNetwork] Time Remaining: {timeRemaining}");
     }
-
     public override void Render()
     {
         if (!ChessManager.Instance.IsGameActive) return;
-
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = Mathf.Max(0, ChessManager.Instance.timePerTurn - elapsedTime);
-
         ChessManager.Instance.timerText.text = $"{(int)timeRemaining}s - {ChessManager.Instance.GetPlayerTeam()}";
     }
 
