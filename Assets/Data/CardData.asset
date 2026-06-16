@@ -17,49 +17,121 @@ MonoBehaviour:
     type: 1
     sprite: {fileID: -1663454765, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 1
-    amount: 10
+    amount: 5
     description: 
   - color: 1
     type: 1
     sprite: {fileID: -392937321, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 2
-    amount: 10
+    amount: 4
+    description: 
+  - color: 1
+    type: 1
+    sprite: {fileID: 2086626821, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 3
+    amount: 2
+    description: 
+  - color: 1
+    type: 1
+    sprite: {fileID: 936996190, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 4
+    amount: 1
     description: 
   - color: 4
     type: 1
     sprite: {fileID: -1309521287, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 1
-    amount: 2
+    amount: 5
     description: 
   - color: 4
     type: 1
     sprite: {fileID: 906977971, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 2
+    amount: 4
+    description: 
+  - color: 4
+    type: 1
+    sprite: {fileID: 980380164, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 3
     amount: 2
     description: 
-  - color: 2
+  - color: 4
     type: 1
-    sprite: {fileID: 506292471, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
-    value: 3
-    amount: 0
-    description: 
-  - color: 3
-    type: 1
-    sprite: {fileID: 851495575, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    sprite: {fileID: -2023368895, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 4
-    amount: 0
+    amount: 1
     description: 
   - color: 5
     type: 2
     sprite: {fileID: 9057613220900497664, guid: b363ad6d744164d48b2e6c4a4d8821a3, type: 3}
     value: 0
-    amount: 10
+    amount: 2
     description: 
   - color: 5
     type: 3
     sprite: {fileID: -303975108, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
-    amount: 0
+    amount: 4
+    description: 
+  - color: 5
+    type: 4
+    sprite: {fileID: -6281116617902313247, guid: 2770097bea25ee840b9367c6968a8436, type: 3}
+    value: 0
+    amount: 12
+    description: 
+  - color: 2
+    type: 1
+    sprite: {fileID: -183039656, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 1
+    amount: 5
+    description: 
+  - color: 2
+    type: 1
+    sprite: {fileID: -1257245475, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 2
+    amount: 4
+    description: 
+  - color: 2
+    type: 1
+    sprite: {fileID: 506292471, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 3
+    amount: 2
+    description: 
+  - color: 2
+    type: 1
+    sprite: {fileID: 1575409857, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 4
+    amount: 1
+    description: 
+  - color: 5
+    type: 5
+    sprite: {fileID: -1425833034, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 4
+    amount: 7
+    description: 
+  - color: 3
+    type: 1
+    sprite: {fileID: -1011739060, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 1
+    amount: 5
+    description: 
+  - color: 3
+    type: 1
+    sprite: {fileID: 969039336, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 2
+    amount: 4
+    description: 
+  - color: 3
+    type: 1
+    sprite: {fileID: 193493121, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 3
+    amount: 2
+    description: 
+  - color: 3
+    type: 1
+    sprite: {fileID: 851495575, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 4
+    amount: 1
     description: 
   - color: 1
     type: 3
@@ -75,19 +147,13 @@ MonoBehaviour:
     description: 
   - color: 3
     type: 3
-    sprite: {fileID: -6281116617902313247, guid: 9da66276530223649b8a01d12910553b, type: 3}
+    sprite: {fileID: -1587721087, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
     amount: 0
     description: 
-  - color: 5
-    type: 4
-    sprite: {fileID: -6281116617902313247, guid: 2770097bea25ee840b9367c6968a8436, type: 3}
+  - color: 4
+    type: 3
+    sprite: {fileID: -1934314042, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
-    amount: 10
-    description: 
-  - color: 5
-    type: 5
-    sprite: {fileID: -1425833034, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
-    value: 4
-    amount: 2
+    amount: 0
     description: 
