@@ -588,37 +588,43 @@ public class UnoManager : NetworkBehaviour
                 {
                     cardUI.DestroyCard();
                 });
+                break;
             }
         }
 
-        if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
+        if (!skipRefresh)
         {
-            foreach (Transform child in MyCardTf)
-            {
-                UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardData.ID)
-                {
-                    cardUI.DestroyCard();
-                    if (!skipRefresh)
-                        DOVirtual.DelayedCall(0.2f, () => RefreshHand(MyCardTf)); // ← delay 0.2f
-                    break;
-                }
-            }
+            RefreshHand(targetHandTf); 
         }
-        else
-        {
-            foreach (Transform child in OpponentCardTf)
-            {
-                UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardData.ID)
-                {
-                    cardUI.DestroyCard();
-                    if (!skipRefresh)
-                        DOVirtual.DelayedCall(0.2f, () => RefreshHand(OpponentCardTf)); // ← delay 0.2f
-                    break;
-                }
-            }
-        }
+
+        //if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
+        //{
+        //    foreach (Transform child in MyCardTf)
+        //    {
+        //        UnoCard cardUI = child.GetComponent<UnoCard>();
+        //        if (cardUI.cardData.ID == cardData.ID)
+        //        {
+        //            cardUI.DestroyCard();
+        //            if (!skipRefresh)
+        //                DOVirtual.DelayedCall(0.2f, () => RefreshHand(MyCardTf)); // ← delay 0.2f
+        //            break;
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    foreach (Transform child in OpponentCardTf)
+        //    {
+        //        UnoCard cardUI = child.GetComponent<UnoCard>();
+        //        if (cardUI.cardData.ID == cardData.ID)
+        //        {
+        //            cardUI.DestroyCard();
+        //            if (!skipRefresh)
+        //                DOVirtual.DelayedCall(0.2f, () => RefreshHand(OpponentCardTf)); // ← delay 0.2f
+        //            break;
+        //        }
+        //    }
+        //}
 
         if (playerTeam == ChessManager.Instance.GetPlayerTeam())
         {
