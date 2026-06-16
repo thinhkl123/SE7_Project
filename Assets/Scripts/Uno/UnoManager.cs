@@ -284,10 +284,27 @@ public class UnoManager : NetworkBehaviour
     {
         UnoCard cardUI = Instantiate(CardPrefab, parentTf);
         cardUI.SetCardData(cardData, isOpponent);
+
         if (!isOpponent)
         {
             myCardList.Add(cardUI);
         }
+
+        // Set vị trí khởi đầu ở DeckPoint
+        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+        cardRect.position = DeckPoint.position;
+        cardRect.localScale = Vector3.one;
+        cardRect.localRotation = Quaternion.identity;
+
+        // Sorting bài ngay lập tức để tránh bị che bởi bài khác khi đang di chuyển
+        Canvas canvas = cardRect.GetComponent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = cardRect.gameObject.AddComponent<Canvas>();
+            cardRect.gameObject.AddComponent<GraphicRaycaster>();
+        }
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = parentTf.childCount; // Luôn ở trên cùng
     }
 
     private void RenderTopCard()
@@ -382,7 +399,7 @@ public class UnoManager : NetworkBehaviour
         RenderAddCard(drawnCard, targetTf, playerTeam != ChessManager.Instance.GetPlayerTeam());
         UpdateActiveCard();
 
-        DOVirtual.DelayedCall(0.2f, () => RefreshHand(targetTf));
+        RefreshHand(targetTf);
 
         // Chỉ switch turn nếu không phải đang rút nhiều lá
         if (!isDrawingMultiple)
