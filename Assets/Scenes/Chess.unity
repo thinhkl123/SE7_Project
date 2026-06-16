@@ -5283,7 +5283,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnoDeckManager
   CardSO: {fileID: 11400000, guid: 4feaccbf58508fb4aac1f2d4e4232d74, type: 2}
-  InitialHandSize: 10
+  InitialHandSize: 6
   CardPrefab: {fileID: 3748127431296698249, guid: e3a95189928d3374f986cafc9936ec1d, type: 3}
   MyCardTf: {fileID: 302397254}
   OpponentCardTf: {fileID: 1255970106}
@@ -5296,6 +5296,9 @@ MonoBehaviour:
   _ReleaseCardCount: 0
   _NextCardID: 0
   _IsReleasedCard: 0
+  _IsResponseWindowOpen: 0
+  _ResponseWindowStartTime: 0
+  _PendingCardTeam: 0
 --- !u!114 &960775818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10615,6 +10618,7 @@ MonoBehaviour:
   _currentTurn: 0
   _IsGameActive: 0
   _TurnCount: 0
+  _TurnTimeElapsedBeforeWindow: 0
   timePerTurn: 30
   timerText: {fileID: 508406183}
   _turnStartTime: 0
