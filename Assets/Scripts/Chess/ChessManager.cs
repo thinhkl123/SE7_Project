@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChessManager : NetworkBehaviour, IPlayerJoined
 {
@@ -276,7 +277,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         if (TurnCount - 1 <= 0)
         {
             Debug.Log("Chuyển luợt!");
-            movedPiecesThisTurn.Clear();
             SwitchTurn();
         }
         else
@@ -287,9 +287,14 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         // Làm mờ quân đã đi trong lượt này
         foreach (var movedPiece in movedPiecesThisTurn)
         {
-            Renderer renderer = movedPiece.GetComponentInChildren<Renderer>();
+            Image renderer = movedPiece.GetComponent<Image>();
             if (renderer != null)
-                renderer.material.color = new Color(1, 1, 1, 0.5f);
+            {
+                Color c = renderer.color;
+                c.a = 0.8f; // Giảm alpha để làm mờ
+                renderer.color = c;
+
+            }
         }
     }
 
@@ -320,24 +325,25 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         if (Runner.IsServer)
         {
             Debug.Log("Switching turn...");
-            foreach (var piece in movedPiecesThisTurn)
-            {
-                if (piece != null)
-                {
-                    Renderer renderer = piece.GetComponentInChildren<Renderer>();
-                    if (renderer != null)
-                        renderer.material.color = new Color(1, 1, 1, 1f);
-                }
-            }
-            movedPiecesThisTurn.Clear();
             currentTurn = (currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White;
             turnStartTime = Runner.SimulationTime;
             SetTurnCount(0);
             UnoManager.Instance.SetIsReleasedCard(false);
             UnoManager.Instance.Rpc_UpdateDrawCardButton();
-            movedPiecesThisTurn.Clear();
-
         }
+        foreach (var movedPiece in movedPiecesThisTurn)
+        {
+            Image renderer = movedPiece.GetComponent<Image>();
+            if (renderer != null)
+            {
+                Color c = renderer.color;
+                c.a = 1f;
+                renderer.color = c;
+
+            }
+        }
+        movedPiecesThisTurn.Clear();
+
     }
 
     private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)

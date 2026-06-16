@@ -17,13 +17,13 @@ MonoBehaviour:
     type: 1
     sprite: {fileID: -1663454765, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 1
-    amount: 20
+    amount: 10
     description: 
   - color: 1
     type: 1
     sprite: {fileID: -392937321, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 2
-    amount: 2
+    amount: 10
     description: 
   - color: 4
     type: 1
@@ -51,7 +51,7 @@ MonoBehaviour:
     description: 
   - color: 5
     type: 2
-    sprite: {fileID: -693803687, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    sprite: {fileID: 9057613220900497664, guid: b363ad6d744164d48b2e6c4a4d8821a3, type: 3}
     value: 0
     amount: 10
     description: 

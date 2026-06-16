@@ -589,17 +589,19 @@ public class UnoManager : NetworkBehaviour
     {
         if (Runner.IsServer)
         {
-            IsResponseWindowOpen = true;
             ResponseWindowStartTime = Runner.SimulationTime;
             PendingCard = cardData;
             PendingCardTeam = playerTeam;
-
-            // Snapshot how much turn time was already used
             ChessManager.Instance.TurnTimeElapsedBeforeWindow =
                 Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         }
 
-        UpdateActiveCard(); // re-evaluate which cards are clickable
+        // ✅ Set trực tiếp trên tất cả clients, không đợi sync
+        IsResponseWindowOpen = true;
+        PendingCard = cardData;
+        PendingCardTeam = playerTeam;
+
+        UpdateActiveCard();
         Rpc_UpdateDrawCardButton();
     }
     [Rpc(RpcSources.All, RpcTargets.All)]
@@ -611,7 +613,7 @@ public class UnoManager : NetworkBehaviour
             ChessManager.Instance.turnStartTime =
                 Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
         }
-
+        IsResponseWindowOpen = false;
         SetIsReleasedCard(true);
         SetTopCardVisualOnly(blockCardData); // chỉ render, chưa update active
         ChessManager.Instance.SwitchTurn(); // currentTurn đổi trước
@@ -635,6 +637,7 @@ public class UnoManager : NetworkBehaviour
             ChessManager.Instance.turnStartTime =
                 Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
         }
+        IsResponseWindowOpen = false;
         // Dispatch to the original card's effect
         switch ((CardType)PendingCard.CardType)
         {
