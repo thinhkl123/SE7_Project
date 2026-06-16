@@ -618,7 +618,6 @@ public class UnoManager : NetworkBehaviour
                 Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
         }
         IsResponseWindowOpen = false;
-        SetIsReleasedCard(true);
         SetTopCardVisualOnly(blockCardData); // chỉ render, chưa update active
         ChessManager.Instance.SwitchTurn(); // currentTurn đổi trước
 
