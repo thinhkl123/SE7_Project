@@ -438,7 +438,7 @@ public class UnoManager : NetworkBehaviour
         ReverserCard();
         ChessManager.Instance.SwitchTeam();
         ChessManager.Instance.SwitchTurn();
-        SetTopCard(TopCard);
+        SetTopCard(cardData);
     }
 
     private void ReverserCard()

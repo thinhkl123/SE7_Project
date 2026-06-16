@@ -37,6 +37,10 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     //response 
     [Networked] public float TurnTimeElapsedBeforeWindow { get; set; }
 
+    //track chess pieces that have moved 
+    // Track quân đã đi trong lượt hiện tại
+    private List<ChessPiece> movedPiecesThisTurn = new List<ChessPiece>();
+
     public bool IsGameActiveForPlayer()
     {
         if (!IsSpawned) return false;
@@ -188,6 +192,14 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             {
                 if (chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x].team == myTeam)
                 {
+                    ChessPiece selected = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
+
+                    // Nếu quân này đã đi rồi trong lượt này thì không cho chọn
+                    if (movedPiecesThisTurn.Contains(selected))
+                    {
+                        Debug.Log("Quân này đã đi rồi trong lượt này!");
+                        return;
+                    }
                     currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
                     availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
                     // Thêm code để highlight các ô có thể đi ở đây
@@ -211,6 +223,16 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                 {
                     if (chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x].team == myTeam)
                     {
+                        ChessPiece selected = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
+                        if (movedPiecesThisTurn.Contains(selected))
+                        {
+                            Debug.Log("Quân này đã đi rồi trong lượt này!");
+                            // Clear drag hiện tại vì click vào quân không hợp lệ
+                            currentlyDragging = null;
+                            availableMoves.Clear();
+                            ChessBoard.Instance.ClearHighlights();
+                            return;
+                        }
                         currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
                         availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
                         // Thêm code để highlight các ô có thể đi ở đây
@@ -249,16 +271,25 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             }
         }
         ChessBoard.Instance.ClearHighlights();
+        movedPiecesThisTurn.Add(chessPieces[x + y * ChessBoard.Instance.BoardSize.x]);
 
         if (TurnCount - 1 <= 0)
         {
-            Debug.Log("Chuyển lượt!");
+            Debug.Log("Chuyển luợt!");
+            movedPiecesThisTurn.Clear();
             SwitchTurn();
         }
         else
         {
-            Debug.Log($"Còn {TurnCount - 1} lượt nữa trước khi chuyển lượt!");
+            Debug.Log($"Còn {TurnCount - 1} nước nữa trước khi chuyển lượt!");
             SetTurnCount(TurnCount - 1);
+        }
+        // Làm mờ quân đã đi trong lượt này
+        foreach (var movedPiece in movedPiecesThisTurn)
+        {
+            Renderer renderer = movedPiece.GetComponentInChildren<Renderer>();
+            if (renderer != null)
+                renderer.material.color = new Color(1, 1, 1, 0.5f);
         }
     }
 
@@ -289,11 +320,23 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         if (Runner.IsServer)
         {
             Debug.Log("Switching turn...");
+            foreach (var piece in movedPiecesThisTurn)
+            {
+                if (piece != null)
+                {
+                    Renderer renderer = piece.GetComponentInChildren<Renderer>();
+                    if (renderer != null)
+                        renderer.material.color = new Color(1, 1, 1, 1f);
+                }
+            }
+            movedPiecesThisTurn.Clear();
             currentTurn = (currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White;
             turnStartTime = Runner.SimulationTime;
             SetTurnCount(0);
             UnoManager.Instance.SetIsReleasedCard(false);
             UnoManager.Instance.Rpc_UpdateDrawCardButton();
+            movedPiecesThisTurn.Clear();
+
         }
     }
 
