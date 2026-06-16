@@ -617,12 +617,13 @@ public class UnoManager : NetworkBehaviour
             ChessManager.Instance.turnStartTime =
                 Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
         }
+        SetIsReleasedCard(true);
         IsResponseWindowOpen = false;
         SetTopCardVisualOnly(blockCardData); // chỉ render, chưa update active
         ChessManager.Instance.SwitchTurn(); // currentTurn đổi trước
 
         // Delay nhỏ để đảm bảo SwitchTurn sync xong mới evaluate
-        DOVirtual.DelayedCall(0.1f, () =>
+        DOVirtual.DelayedCall(0.4f, () =>
         {
             UpdateActiveCard();
             Rpc_UpdateDrawCardButton();
