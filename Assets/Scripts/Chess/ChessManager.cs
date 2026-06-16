@@ -34,6 +34,9 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     [Networked] public bool IsGameActive { get; set; } = false;
     [Networked] public int TurnCount { get; set; }
 
+    //response 
+    [Networked] public float TurnTimeElapsedBeforeWindow { get; set; }
+
     public bool IsGameActiveForPlayer()
     {
         if (!IsSpawned) return false;
@@ -80,34 +83,77 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         //turnStartTime = Runner.SimulationTime;
     }
 
+    //public override void FixedUpdateNetwork()
+    //{
+    //    if (!IsGameActive) return;
+
+    //    float elapsedTime = Runner.SimulationTime - turnStartTime;
+    //    float timeRemaining = timePerTurn - elapsedTime;
+
+    //    if (timeRemaining <= 0)
+    //    {
+    //        SwitchTurn();
+    //    }
+
+    //    //Debug.Log($"[FixedUpdateNetwork] Time Remaining: {timeRemaining}");
+    //}
+
+    //public override void Render()
+    //{
+    //    if (!IsGameActive) return;
+
+    //    //Time update
+    //    float elapsedTime = Runner.SimulationTime - turnStartTime;
+    //    float timeRemaining = Mathf.Max(0, timePerTurn - elapsedTime);
+
+    //    timerText.text = $"{(int)timeRemaining}s - {(Team)currentTurn}";
+
+    //    //Turn update
+    //    turnText.text = $"Turn: {TurnCount}";
+    //}
+
     public override void FixedUpdateNetwork()
     {
-        if (!IsGameActive) return;
+        if (!ChessManager.Instance.IsGameActive) return;
 
-        float elapsedTime = Runner.SimulationTime - turnStartTime;
-        float timeRemaining = timePerTurn - elapsedTime;
+        // Response window countdown — runs independently of turn timer
+        if (UnoManager.Instance.IsResponseWindowOpen)
+        {
+            float remaining = UnoManager.Instance.GetResponseWindowTimeRemaining();
+            if (remaining <= 0f && Runner.IsServer)
+            {
+                UnoManager.Instance.Rpc_ResolveCard(); // auto-resolve after 7s
+            }
+            return; // pause turn timer while window is open
+        }
+
+        float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
+        float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
 
         if (timeRemaining <= 0)
         {
-            SwitchTurn();
+            ChessManager.Instance.SwitchTurn();
         }
-
-        //Debug.Log($"[FixedUpdateNetwork] Time Remaining: {timeRemaining}");
     }
 
     public override void Render()
     {
-        if (!IsGameActive) return;
+        if (!ChessManager.Instance.IsGameActive) return;
 
-        //Time update
-        float elapsedTime = Runner.SimulationTime - turnStartTime;
-        float timeRemaining = Mathf.Max(0, timePerTurn - elapsedTime);
+        if (UnoManager.Instance.IsResponseWindowOpen)
+        {
+            float remaining = UnoManager.Instance.GetResponseWindowTimeRemaining();
+            ChessManager.Instance.timerText.text = $"{(Team)((currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White)}: {(int)remaining}s to response"; ;
+            return;
+        }
 
-        timerText.text = $"{(int)timeRemaining}s - {(Team)currentTurn}";
-
-        //Turn update
+        float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
+        float timeRemaining = Mathf.Max(0, ChessManager.Instance.timePerTurn - elapsedTime);
+        ChessManager.Instance.timerText.text = $"{(int)timeRemaining}s - {(Team)currentTurn}";
         turnText.text = $"Turn: {TurnCount}";
     }
+
+
 
     public void SwitchTeam()
     {
