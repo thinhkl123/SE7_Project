@@ -565,6 +565,32 @@ public class UnoManager : NetworkBehaviour
             }
         }
 
+        RectTransform targetHandTf = (ChessManager.Instance.GetPlayerTeam() == playerTeam) ? MyCardTf : OpponentCardTf;
+
+        foreach (Transform child in targetHandTf)
+        {
+            UnoCard cardUI = child.GetComponent<UnoCard>();
+            if (cardUI.cardData.ID == cardData.ID)
+            {
+                RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+                cardRect.SetParent(TopCardImage.rectTransform.parent);
+
+                Canvas canvas = cardRect.GetComponent<Canvas>();
+                if (canvas == null)
+                {
+                    canvas = cardRect.gameObject.AddComponent<Canvas>();
+                    cardRect.gameObject.AddComponent<GraphicRaycaster>();
+                }
+                canvas.overrideSorting = true;
+                canvas.sortingOrder = 100; // Luôn ở trên cùng
+
+                cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f).SetEase(Ease.OutQuad).OnComplete(() =>
+                {
+                    cardUI.DestroyCard();
+                });
+            }
+        }
+
         if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
         {
             foreach (Transform child in MyCardTf)
