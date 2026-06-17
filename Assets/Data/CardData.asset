@@ -77,7 +77,7 @@ MonoBehaviour:
     type: 4
     sprite: {fileID: -6281116617902313247, guid: 2770097bea25ee840b9367c6968a8436, type: 3}
     value: 0
-    amount: 12
+    amount: 6
     description: 
   - color: 2
     type: 1
@@ -156,4 +156,28 @@ MonoBehaviour:
     sprite: {fileID: -1934314042, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 0
     amount: 0
+    description: 
+  - color: 1
+    type: 5
+    sprite: {fileID: -407433008, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 2
+    amount: 2
+    description: 
+  - color: 3
+    type: 5
+    sprite: {fileID: 1662054951, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 2
+    amount: 2
+    description: 
+  - color: 2
+    type: 5
+    sprite: {fileID: -735419318, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 2
+    amount: 2
+    description: 
+  - color: 2
+    type: 5
+    sprite: {fileID: -735419318, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    value: 2
+    amount: 2
     description: 
