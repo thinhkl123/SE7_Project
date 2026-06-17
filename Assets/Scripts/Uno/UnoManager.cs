@@ -331,11 +331,6 @@ public class UnoManager : NetworkBehaviour
                 .SetEase(Ease.OutBack)
         );
 
-        seq.OnComplete(() =>
-        {
-            DOVirtual.DelayedCall(2f, () => ChessManager.Instance.InitChessGame());
-        });
-
         //Sprite cardSprite = CardSO.GetSprite((CardColor)TopCard.CardColor, (CardType)TopCard.CardType, TopCard.Value);
         //TopCardImage.sprite = cardSprite;
     }
@@ -578,24 +573,25 @@ public class UnoManager : NetworkBehaviour
             }
         }
 
-        RectTransform targetHandTf = (ChessManager.Instance.GetPlayerTeam() == playerTeam) ? MyCardTf : OpponentCardTf;
+        RectTransform targetHandTf = ((int)ChessManager.Instance.GetPlayerTeam() == ChessManager.Instance.currentTurn) ? MyCardTf : OpponentCardTf;
 
         foreach (Transform child in targetHandTf)
         {
             UnoCard cardUI = child.GetComponent<UnoCard>();
             if (cardUI.cardData.ID == cardData.ID)
             {
+                cardUI.CanClick = false; // Disable interaction ngay lập tức
                 RectTransform cardRect = cardUI.GetComponent<RectTransform>();
-                cardRect.SetParent(TopCardImage.rectTransform.parent);
+                cardRect.SetParent(TopCardImage.transform.parent);
 
-                Canvas canvas = cardRect.GetComponent<Canvas>();
-                if (canvas == null)
-                {
-                    canvas = cardRect.gameObject.AddComponent<Canvas>();
-                    cardRect.gameObject.AddComponent<GraphicRaycaster>();
-                }
-                canvas.overrideSorting = true;
-                canvas.sortingOrder = 100; // Luôn ở trên cùng
+                //Canvas canvas = cardRect.GetComponent<Canvas>();
+                //if (canvas == null)
+                //{
+                //    canvas = cardRect.gameObject.AddComponent<Canvas>();
+                //    cardRect.gameObject.AddComponent<GraphicRaycaster>();
+                //}
+                //canvas.overrideSorting = true;
+                //canvas.sortingOrder = 100; // Luôn ở trên cùng
 
                 cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f).SetEase(Ease.OutQuad).OnComplete(() =>
                 {
@@ -607,35 +603,35 @@ public class UnoManager : NetworkBehaviour
 
         if (!skipRefresh)
         {
-            RefreshHand(targetHandTf); 
+            RefreshHand(targetHandTf);
         }
 
-        if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
-        {
-            foreach (Transform child in MyCardTf)
-            {
-                UnoCard cardUI = child.GetComponent<UnoCard>();
-                if (cardUI.cardData.ID == cardData.ID)
-                {
-                    cardUI.DestroyCard();
-                    if (!skipRefresh)
-                        DOVirtual.DelayedCall(0.2f, () => RefreshHand(MyCardTf)); // ← delay 0.2f
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // Opponent cards là face-down, không match được ID
-            // Chỉ cần destroy 1 card bất kỳ để giảm số lượng hiển thị
-            if (OpponentCardTf.childCount > 0)
-            {
-                UnoCard cardUI = OpponentCardTf.GetChild(0).GetComponent<UnoCard>();
-                cardUI.DestroyCard();
-                if (!skipRefresh)
-                    DOVirtual.DelayedCall(0.2f, () => RefreshHand(OpponentCardTf));
-            }
-        }
+        //if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
+        //{
+        //    foreach (Transform child in MyCardTf)
+        //    {
+        //        UnoCard cardUI = child.GetComponent<UnoCard>();
+        //        if (cardUI.cardData.ID == cardData.ID)
+        //        {
+        //            cardUI.DestroyCard();
+        //            if (!skipRefresh)
+        //                DOVirtual.DelayedCall(0.2f, () => RefreshHand(MyCardTf)); // ← delay 0.2f
+        //            break;
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    // Opponent cards là face-down, không match được ID
+        //    // Chỉ cần destroy 1 card bất kỳ để giảm số lượng hiển thị
+        //    if (OpponentCardTf.childCount > 0)
+        //    {
+        //        UnoCard cardUI = OpponentCardTf.GetChild(0).GetComponent<UnoCard>();
+        //        cardUI.DestroyCard();
+        //        if (!skipRefresh)
+        //            DOVirtual.DelayedCall(0.2f, () => RefreshHand(OpponentCardTf));
+        //    }
+        //}
 
         if (playerTeam == ChessManager.Instance.GetPlayerTeam())
         {

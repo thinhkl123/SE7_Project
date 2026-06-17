@@ -11,7 +11,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     public Image CardSprite;
     public Sprite BackSprite;
 
-    public bool CanClick { get; private set; } = true;
+    public bool CanClick { get; set; } = true;
 
     private bool isOpponentCard;
     private Vector3 startScale;

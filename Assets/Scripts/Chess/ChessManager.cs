@@ -1,4 +1,5 @@
-﻿using Fusion;
+﻿using DG.Tweening;
+using Fusion;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -446,6 +447,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                 UnoManager.Instance.InitializeDeck();
 
                 Debug.Log("Hai người chơi đã sẵn sàng. Trò chơi bắt đầu!");
+
+                DOVirtual.DelayedCall(2f, () => InitChessGame());
             }
         }
     }

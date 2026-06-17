@@ -46,7 +46,7 @@ public class NetworkHandler : MonoBehaviour
         await _runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
-            SessionName = "Room",
+            SessionName = "ChessRoom",
             Scene = scene,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
