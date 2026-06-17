@@ -90,8 +90,8 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         {
             if (!UnoManager.Instance.IsResponseWindowOpen) return;
             if (ChessManager.Instance.IsPlayerTurn()) return;
-            UnoManager.Instance.RemoveCard(cardData, playerTeam);
-            UnoManager.Instance.Rpc_BlockCard(playerTeam, cardData); // ← truyền cardData
+            UnoManager.Instance.Rpc_RemoveCard(cardData, playerTeam);
+            UnoManager.Instance.Rpc_BlockCard(playerTeam, cardData);
             return;
         }
 
@@ -99,7 +99,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         if (!ChessManager.Instance.IsPlayerTurn()) return;
         if (UnoManager.Instance.IsPlayerReleasedCard()) return;
 
-        UnoManager.Instance.RemoveCard(cardData, playerTeam);
+        UnoManager.Instance.Rpc_RemoveCard(cardData, playerTeam);
         UnoManager.Instance.Rpc_PreviewCard(cardData);
         UnoManager.Instance.Rpc_OpenResponseWindow(cardData, playerTeam);
     }

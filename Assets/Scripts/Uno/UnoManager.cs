@@ -437,11 +437,15 @@ public class UnoManager : NetworkBehaviour
         ReleaseCardCount = 0;
         NextCardID = 0;
     }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_RemoveCard(UnoCardData cardData, Team playerTeam)
+    {
+        RemoveCard(cardData, playerTeam);
+    }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ReleaseMoveCard(UnoCardData cardData, Team playerTeam, int count)
     {
-        RemoveCard(cardData, playerTeam);
         SetIsReleasedCard(true);
         ChessManager.Instance.SetTurnCount(count);
         SetTopCard(cardData);
@@ -450,7 +454,6 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ReleaseReverseCard(UnoCardData cardData, Team playerTeam)
     {
-        RemoveCard(cardData, playerTeam);
         SetIsReleasedCard(true);
         ReverserCard();
         ChessManager.Instance.SwitchTeam();
@@ -479,8 +482,12 @@ public class UnoManager : NetworkBehaviour
 
     public void ReleaseChangeColorCard(UnoCardData cardData, Team playerTeam)
     {
-        RemoveCard(cardData, playerTeam);
-        UIManager.Instance.OpenUI<ChooseColorUI>();
+
+        // Chỉ mở UI cho người đã đánh card
+        if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
+        {
+            UIManager.Instance.OpenUI<ChooseColorUI>();
+        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
@@ -500,7 +507,6 @@ public class UnoManager : NetworkBehaviour
 
     public void ReleaseAddCard(UnoCardData cardData, Team playerTeam, int count)
     {
-        RemoveCard(cardData, playerTeam, skipRefresh: true);
         SetIsReleasedCard(true);
         SetTopCard(cardData);
 
@@ -514,7 +520,7 @@ public class UnoManager : NetworkBehaviour
             Rpc_DrawCard(playerTeam, false);
         }
 
-        isDrawingMultiple = false; // ← tắt flag sau khi rút xong
+        isDrawingMultiple = false; // tắt flag sau khi rút xong
 
         // Switch turn 1 lần duy nhất sau khi rút đủ bài
         ChessManager.Instance.SwitchTurn();
@@ -645,7 +651,7 @@ public class UnoManager : NetworkBehaviour
                 Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         }
 
-        // ✅ Set trực tiếp trên tất cả clients, không đợi sync
+        // Set trực tiếp trên tất cả clients, không đợi sync
         IsResponseWindowOpen = true;
         PendingCard = cardData;
         PendingCardTeam = playerTeam;
@@ -662,13 +668,13 @@ public class UnoManager : NetworkBehaviour
             ChessManager.Instance.turnStartTime =
                 Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
         }
-        IsResponseWindowOpen = false;
         SetIsReleasedCard(true);
+        IsResponseWindowOpen = false;
         SetTopCardVisualOnly(blockCardData); // chỉ render, chưa update active
         ChessManager.Instance.SwitchTurn(); // currentTurn đổi trước
 
         // Delay nhỏ để đảm bảo SwitchTurn sync xong mới evaluate
-        DOVirtual.DelayedCall(0.1f, () =>
+        DOVirtual.DelayedCall(0.4f, () =>
         {
             UpdateActiveCard();
             Rpc_UpdateDrawCardButton();
@@ -716,8 +722,7 @@ public class UnoManager : NetworkBehaviour
 
     private void SetTopCardVisualOnly(UnoCardData cardData)
     {
-        if (Runner.IsServer) TopCard = cardData;
+        TopCard = cardData; // bỏ if (Runner.IsServer), cả hai phía đều set
         RenderTopCard();
-        // Không gọi UpdateActiveCard hay Rpc_UpdateDrawCardButton
     }
 }
