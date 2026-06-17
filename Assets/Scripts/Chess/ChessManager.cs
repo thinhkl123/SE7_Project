@@ -50,7 +50,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     }
 
     [Header("Turn Timer Settings")]
-    public float timePerTurn = 30f; 
+    private float timePerTurn = 30f; 
     public TextMeshProUGUI timerText;
     [Networked] public float turnStartTime { get; set; }
 
@@ -154,7 +154,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = Mathf.Max(0, ChessManager.Instance.timePerTurn - elapsedTime);
-        ChessManager.Instance.timerText.text = $"{(int)timeRemaining}s - {(Team)currentTurn}";
+        ChessManager.Instance.timerText.text = $"{Mathf.Ceil(timeRemaining)}s - {(Team)currentTurn}";
         turnText.text = $"Turn: {TurnCount}";
     }
 
@@ -434,13 +434,14 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         {
             if (playerCount < 2)
             {
+                IsGameActive = false;
                 UIManager.Instance.OpenUI<LoadingUI>().ShowLoading("Waiting for opponent...", 0.5f);
             }
             else
             {
                 UIManager.Instance.CloseUI<LoadingUI>();
 
-                InitChessGame();
+                //InitChessGame();
 
                 UnoManager.Instance.InitializeDeck();
 
