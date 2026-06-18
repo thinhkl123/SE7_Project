@@ -175,9 +175,9 @@ MonoBehaviour:
     value: 2
     amount: 2
     description: 
-  - color: 2
+  - color: 4
     type: 5
-    sprite: {fileID: -735419318, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
+    sprite: {fileID: -1938504028, guid: e1db0377dc8f9a349830a8257befd1d5, type: 3}
     value: 2
     amount: 2
     description: 
