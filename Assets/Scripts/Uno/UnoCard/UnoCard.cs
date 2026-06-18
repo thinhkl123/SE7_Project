@@ -216,14 +216,30 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             return true;
         }
 
-        if (cardData.CardColor == topCard.CardColor || cardData.Value == topCard.Value)
+
+        if (topCard.CardType == (int)CardType.Add)
         {
-            return true;
+            if(cardData.CardColor == topCard.CardColor || cardData.CardType == (int)CardType.Add) 
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {
-            return false;
+            if (cardData.CardColor == topCard.CardColor || cardData.Value == topCard.Value)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
+
     }
 }
 
