@@ -671,6 +671,7 @@ public class UnoManager : NetworkBehaviour
         IsResponseWindowOpen = true;
         PendingCard = cardData;
         PendingCardTeam = playerTeam;
+      
 
         UpdateActiveCard();
         Rpc_UpdateDrawCardButton();

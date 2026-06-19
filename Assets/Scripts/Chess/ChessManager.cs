@@ -38,6 +38,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
     //response 
     [Networked] public float TurnTimeElapsedBeforeWindow { get; set; }
+    [Networked] public bool IsSkipUIShown { get; set; } = false;
+    [Networked] public bool IsSkipButtonPressed { get; set; } = false;
 
     //track chess pieces that have moved 
     // Track quân đã đi trong lượt hiện tại
@@ -125,6 +127,11 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         // Response window countdown — runs independently of turn timer
         if (UnoManager.Instance.IsResponseWindowOpen)
         {
+            if (!IsSkipUIShown)
+            {
+                Rpc_ShowSkipUI();
+                IsSkipUIShown = true;
+            }
             float remaining = UnoManager.Instance.GetResponseWindowTimeRemaining();
             if (remaining <= 0f && Runner.IsServer)
             {
@@ -133,6 +140,11 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             return; // pause turn timer while window is open
         }
 
+        if( IsSkipUIShown ) 
+        {
+            Rpc_HideSkipUI();
+            IsSkipUIShown = false;
+        }
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
 
@@ -140,6 +152,31 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         {
             ChessManager.Instance.SwitchTurn();
         }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_ShowSkipUI()
+    {
+        if (UnoManager.Instance.PendingCardTeam != myTeam )
+        {
+            UIManager.Instance.OpenUI<SkipResponseUI>();
+        }
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_HideSkipUI()
+    {
+        UIManager.Instance.CloseUI<SkipResponseUI>();
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_PressSkipUI()
+    {
+        if(Runner.IsServer)
+        {
+            IsSkipButtonPressed = true;
+            UnoManager.Instance.IsResponseWindowOpen = false;
+            UnoManager.Instance.Rpc_ResolveCard();
+        }
+        UIManager.Instance.CloseUI<SkipResponseUI>();
     }
 
     public override void Render()
