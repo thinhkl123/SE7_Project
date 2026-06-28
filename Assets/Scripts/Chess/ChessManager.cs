@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusion;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -47,6 +48,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
     public bool IsGameActiveForPlayer()
     {
+        if (Runner == null) return false;
+
         if (!IsSpawned) return false;
 
         return IsGameActive;
@@ -288,10 +291,11 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     private void Rpc_MoveTo(int originalX, int originalY, int x, int y)
     {
         ChessPiece cp = chessPieces[originalX + originalY * ChessBoard.Instance.BoardSize.x];
+        ChessPiece capturedPiece = null;
 
         if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
         {
-            ChessPiece capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
+            capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
 
             if (capturedPiece.type == PieceType.King)
             {
@@ -326,6 +330,14 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         }
         ChessBoard.Instance.ClearHighlights();
         movedPiecesThisTurn.Add(chessPieces[x + y * ChessBoard.Instance.BoardSize.x]);
+
+        if (capturedPiece != null)
+        {
+            if (capturedPiece.type == PieceType.King)
+            {
+                RPC_EndGameWin(cp.team == Team.White ? (int)Team.White : (int)Team.Black, "Đã bắt được vua đối phương!");
+            }
+        }    
 
         if (TurnCount - 1 <= 0)
         {
@@ -418,7 +430,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         chessPieces[5] = SpawnSinglePiece(PieceType.Bishop, Team.White);
         chessPieces[6] = SpawnSinglePiece(PieceType.Knight, Team.White);
         chessPieces[7] = SpawnSinglePiece(PieceType.Rook, Team.White);
-        
+
         for (int i = 0; i < ChessBoard.Instance.BoardSize.x; i++)
         {
             chessPieces[i + ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Pawn, Team.White);
@@ -437,7 +449,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         {
             chessPieces[i + 6 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Pawn, Team.Black);
         }
-        
+
         for (int x = 0; x < ChessBoard.Instance.BoardSize.x; x++)
         {
             for (int y = 0; y < ChessBoard.Instance.BoardSize.x; y++)
@@ -465,6 +477,147 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
         return cp;
     }
+
+    public void PlayerPressQuitButton()
+    {
+        Debug.Log("Người chơi chủ động nhấn thoát game.");
+
+        if (Runner.IsServer)
+        {
+            Host_HandlePlayerQuit(Runner.LocalPlayer);
+        }
+        else
+        {
+            RPC_ClientRequestQuit(Runner.LocalPlayer);
+        }
+    }
+
+    #region [RPCs] Điều phối giữa Host và Client
+
+    // Client gửi yêu cầu này lên Host báo rằng mình chủ động nhấn nút Quit
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ClientRequestQuit(PlayerRef quittingPlayer)
+    {
+        Debug.Log($"RPC: Client {quittingPlayer.PlayerId} chủ động xin hàng.");
+        Host_HandlePlayerQuit(quittingPlayer);
+    }
+
+    // Host gửi cho cả phòng thông báo đang đếm ngược chờ Reconnect
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_NotifyWaitingForReconnect(int secondsLeft)
+    {
+        // Hiển thị UI đếm ngược cho cả 2 bên thấy (nếu Client còn kết nối chập chờn)
+        Debug.Log($"Trận đấu tạm dừng. Chờ đối thủ kết nối lại: {secondsLeft}s");
+        // UI_Manager.ShowReconnectPopup(secondsLeft);
+        NotiCanvas.Instance.ShowPopup($"Opponent lost connection. Waiting for reconnect... {secondsLeft}s", false, false);
+    }
+
+    // Host gửi cho cả phòng báo Reconnect thành công, tiếp tục chơi
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_NotifyReconnectSuccess()
+    {
+        Debug.Log("Đối thủ đã quay lại! Tiếp tục ván cờ.");
+        NotiCanvas.Instance.ClosePopup();
+        NotiCanvas.Instance.ShowTutorialText("Opponent reconnected! Continue the match.", 3f);
+        // UI_Manager.HideReconnectPopup();
+    }
+
+    // Host gửi kết quả trận đấu cho Client còn lại khi có người bị xử thua
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_EndGameQuit(PlayerRef loserPlayer, string reason)
+    {
+        NotiCanvas.Instance.ClosePopup();
+
+        if (Runner.LocalPlayer == loserPlayer)
+        {
+            Debug.Log($"Bạn đã THUA do: {reason}");
+            UIManager.Instance.OpenUI<CanvasLose>();
+        }
+        else
+        {
+            Debug.Log($"Bạn đã THẮNG do: {reason}");
+            UIManager.Instance.OpenUI<CanvasWin>();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_EndGameWin(int team, string reason)
+    {
+        if ((int)GetPlayerTeam() != team)
+        {
+            Debug.Log($"Bạn đã THUA do: {reason}");
+            UIManager.Instance.OpenUI<CanvasLose>();
+        }
+        else
+        {
+            Debug.Log($"Bạn đã THẮNG do: {reason}");
+            UIManager.Instance.OpenUI<CanvasWin>();
+        }
+
+        StartCoroutine(Co_HostDelayShutdown());
+    }
+    #endregion
+
+    #region [Host Logic] Chỉ chạy trên máy Host
+
+    public void Host_HandlePlayerQuit(PlayerRef loserPlayer)
+    {
+        if (!Runner.IsServer) return;
+
+        RPC_EndGameQuit(loserPlayer, "Chủ động rời trận đấu (Đầu hàng)");
+
+        StartCoroutine(Co_HostDelayShutdown());
+    }
+
+    private IEnumerator Co_HostDelayShutdown()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        if (Runner != null)
+        {
+            Runner.Shutdown();
+        }
+    }
+
+    public void Host_HandleClientReconnectTimeout(PlayerRef loserClientPlayer)
+    {
+        if (!Runner.IsServer) return;
+
+        // Hết giờ kết nối lại -> Client bị xử thua
+        RPC_EndGameQuit(loserClientPlayer, "Mất kết nối quá thời gian quy định");
+    }
+
+    #endregion
+
+    #region [Local Logic] Chỉ hiển thị UI local trên máy từng người
+
+    public void Local_ShowWaitingForClientUI(int secondsLeft)
+    {
+        // Gọi UI trên máy Host hiển thị: "Client mất mạng, đang chờ... X giây"
+        NotiCanvas.Instance.ShowPopup($"Client lost connection. Waiting for reconnect... {secondsLeft}s", false, false);
+    }
+
+    public void Local_HandleHostDisconnected()
+    {
+        // Chạy trên máy Client khi nhận thấy Host sập mạng
+        // Hiện UI: "Host (Chủ phòng) đã mất mạng đột ngột. Trận đấu này bị HỦY!"
+        if (GetPlayerTeam() == Team.None)
+            return;
+
+        if (UIManager.Instance.IsOpened<CanvasWin>() || UIManager.Instance.IsOpened<CanvasLose>())
+            return;
+
+        NotiCanvas.Instance.ShowPopup("Host lost connection. The match is canceled.", true, false);
+    }
+
+    public void Local_HandleSelfHostDisconnected()
+    {
+        // Chạy trên máy Host nếu tự bản thân Host bị rớt mạng hoàn toàn khỏi internet
+        // Hiện UI: "Bạn đã mất kết nối Internet. Trận đấu bị hủy."
+        NotiCanvas.Instance.ShowPopup("You lost connection to the Internet. The match is canceled.", true, false);
+    }
+
+    #endregion
 
     public void InitChessGame()
     {

@@ -22,7 +22,7 @@ public class ChessBoard : SingletonMono<ChessBoard>
 
     void Update()
     {
-        if (!ChessManager.Instance.IsGameActiveForPlayer())
+        if (ChessManager.Instance == null || !ChessManager.Instance.IsGameActiveForPlayer())
             return;
 
         if (!ChessManager.Instance.IsPlayerTurn())
