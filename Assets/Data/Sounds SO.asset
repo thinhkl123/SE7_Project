@@ -13,120 +13,50 @@ MonoBehaviour:
   m_Name: Sounds SO
   m_EditorClassIdentifier: 
   sounds:
-  - name: BG_Music_Menu
+  - name: BG_Music
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 799b97b404e7fd64886cf3b21e7d195d, type: 3}
-  - name: BG_Music_Gameplay
-    volume: 1
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: cebcb8144634621409313c1e9273077e, type: 3}
-    - {fileID: 8300000, guid: 10925e66419d2114fa8d0b91e22a7a74, type: 3}
-  - name: Enemy_05_Attack
-    volume: 0.2
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: ee9dca12a86ffda4c99ff39b85de9de3, type: 3}
-  - name: Enemy_06_Attack
-    volume: 0.2
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 0e18a524358839942a7a045795de32ba, type: 3}
-  - name: Enemy_Freeze_Effect
-    volume: 0.7
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 0e44dd4db4d10ea42a7e56ab11a9ce58, type: 3}
-  - name: Enemy_Dead
-    volume: 1
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 66f7bca96e2af2548a9076d8dbba87e0, type: 3}
-    - {fileID: 8300000, guid: c726a1894e65bef4586bc3cbf415764e, type: 3}
-    - {fileID: 8300000, guid: 42ba60ccf9a5a4b48b2b38fca6d90415, type: 3}
-  - name: Unit_Dead
-    volume: 1
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 3cef53b2b5895b044bba6ad7efc44771, type: 3}
-  - name: Unit_Shoot_01
-    volume: 0.5
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: eecd2c39e768b0846b17d41c95d46ec3, type: 3}
-  - name: Unit_Shoot_03
-    volume: 0.5
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 7bcfbb414ae9d824a8aa6571e7edf9b6, type: 3}
-  - name: Unit_Shoot_04
-    volume: 0.1
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 277acd2afaa81774d9a9d4ecf711d743, type: 3}
-  - name: Unit_Shoot_05
-    volume: 0.5
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: c36ba18c457ed2d48bd229cb6096d642, type: 3}
-  - name: Unit_Shoot_06
-    volume: 0.5
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 52dcf7875da437741ab6f0358611e6ed, type: 3}
-  - name: Unit_Shoot_07
-    volume: 0.3
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 9478f4cd92f7468409b3a2a06def2b67, type: 3}
-  - name: Unit_Shoot_08
-    volume: 0.4
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: dfb80c52ccbe6c446b0ee7ef15c9a65e, type: 3}
+    - {fileID: 8300000, guid: 4936ed998137aca469316fdfbeb27265, type: 3}
   - name: Unit_Select
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: d1fa4ef22d34e8b41a3a42f918af2490, type: 3}
-    - {fileID: 8300000, guid: 787a3347e3e9b0847ad0e571e7dd2846, type: 3}
-    - {fileID: 8300000, guid: e5478f00c0be90d47a56ceb4c9f9f668, type: 3}
-  - name: Gold_Drop
+    - {fileID: 8300000, guid: 8ca8689b5ff02cf4eacc5220edffdc61, type: 3}
+  - name: Unit_Move_Chess
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: b4b406ed481f37c478cadea32710fd17, type: 3}
-  - name: Skill_01
+    - {fileID: 8300000, guid: 7a3c8f98d8bdb9b49925268f87094fb8, type: 3}
+  - name: Unit_Attack_Chess
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 0e18a524358839942a7a045795de32ba, type: 3}
-  - name: Skill_03_Airplane
-    volume: 0.8
-    mixer: {fileID: 0}
-    sounds:
-    - {fileID: 8300000, guid: 9bd883759469f8948814d0e7adf6e30b, type: 3}
-  - name: Skill_03_Rocket
+    - {fileID: 8300000, guid: 29bc7261a45619440bd11e171d6c5e96, type: 3}
+  - name: Card_Draw
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 69b845685f18b65478d18cccd4707d67, type: 3}
-  - name: Skill_Select
+    - {fileID: 8300000, guid: 1a0bf4622788adb409ea30ca3024eddc, type: 3}
+  - name: Card_Play
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 9da27524c7a9d9f4db137ebc735f4f67, type: 3}
-    - {fileID: 8300000, guid: dcc2c2d5525bc3e43889aabd0fcf0295, type: 3}
-    - {fileID: 8300000, guid: b742a2ef602eaae4ea228d84b7320b27, type: 3}
-  - name: Level_Complete_Win
-    volume: 0.8
+    - {fileID: 8300000, guid: 2ea0bf091ca68a04daa0900379f084d4, type: 3}
+    - {fileID: 8300000, guid: ed2ca424e4e561c4c9468450ac74156d, type: 3}
+    - {fileID: 8300000, guid: 72ca272955e4e314ca4dee498732ed90, type: 3}
+  - name: Countdown_Tick
+    volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 9fb65a56d1bc12a4f9250ee029a62f8a, type: 3}
-  - name: Level_Complete_Lose
-    volume: 0.3
+    - {fileID: 8300000, guid: c9025248d7fa9ca45a579a0d71cc479e, type: 3}
+  - name: Game_Win
+    volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 4a08e2f1e66d48d4792da827b3bc30dd, type: 3}
+    - {fileID: 8300000, guid: 7719132bf9eb57848b03e2f97a777c0c, type: 3}
+  - name: Game_Lose
+    volume: 1
+    mixer: {fileID: 0}
+    sounds:
+    - {fileID: 8300000, guid: 2a8f4153886165d4386e46511ecb878d, type: 3}

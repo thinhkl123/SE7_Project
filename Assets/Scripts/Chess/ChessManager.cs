@@ -291,7 +291,22 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
         if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
         {
-            Destroy(chessPieces[x + y * ChessBoard.Instance.BoardSize.x].gameObject);
+            ChessPiece capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
+
+            if (capturedPiece.type == PieceType.King)
+            {
+                if (cp.team == myTeam)
+                {
+                    UIManager.Instance.OpenUI<CanvasWin>();
+                }
+                else
+                {
+                    UIManager.Instance.OpenUI<CanvasLose>();
+                }
+
+            }
+
+            Destroy(capturedPiece.gameObject);
         }
 
         chessPieces[x + y * ChessBoard.Instance.BoardSize.x] = cp;

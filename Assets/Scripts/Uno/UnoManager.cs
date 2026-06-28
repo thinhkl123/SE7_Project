@@ -34,6 +34,7 @@ public class UnoManager : NetworkBehaviour
     public RectTransform DeckPoint;
     public Image TopCardImage;
     public Button DrawCardButton;
+    public Button QuitBtn;
 
     [Header("Runtime")]
     [Networked] public int CardNumber { get; set; }
@@ -63,6 +64,11 @@ public class UnoManager : NetworkBehaviour
         DrawCardButton.onClick.AddListener(() =>
         {
             Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+        });
+
+        QuitBtn.onClick.AddListener(() =>
+        {
+            ChessManager.Instance.PlayerPressQuitButton();
         });
     }
 
@@ -234,15 +240,15 @@ public class UnoManager : NetworkBehaviour
             card.DOLocalRotate(Vector3.zero, 0.25f);
 
             // Set canvas sorting ngay lập tức, không cần chờ animation
-            Canvas canvas = card.GetComponent<Canvas>();
-            if (canvas == null)
-            {
-                canvas = card.gameObject.AddComponent<Canvas>();
-                card.gameObject.AddComponent<GraphicRaycaster>();
-            }
-            canvas.overrideSorting = true;
-            int distanceFromMiddle = Mathf.Abs(i - middle);
-            canvas.sortingOrder = count - distanceFromMiddle;
+            //Canvas canvas = card.GetComponent<Canvas>();
+            //if (canvas == null)
+            //{
+            //    canvas = card.gameObject.AddComponent<Canvas>();
+            //    card.gameObject.AddComponent<GraphicRaycaster>();
+            //}
+            //canvas.overrideSorting = true;
+            //int distanceFromMiddle = Mathf.Abs(i - middle);
+            //canvas.sortingOrder = count - distanceFromMiddle;
         }
     }
 
