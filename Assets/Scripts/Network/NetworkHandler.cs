@@ -1,4 +1,4 @@
-using CustomUtils;
+﻿using CustomUtils;
 using Fusion;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,7 +19,7 @@ public class NetworkHandler : MonoBehaviour
 
     private NetworkRunner _runner;
 
-    public async void JoinGame(GameMode mode)
+    public async void JoinGame(GameMode mode, string roomName)
     {
         if (mode == GameMode.Host)
         {
@@ -43,13 +43,22 @@ public class NetworkHandler : MonoBehaviour
         }
 
         // Start or join (depends on gamemode) a session with a specific name
-        await _runner.StartGame(new StartGameArgs()
+        var result = await _runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
-            SessionName = "ChessRoom",
+            SessionName = roomName,
             Scene = scene,
+            PlayerCount = 2,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
+
+        UIManager.Instance.CloseUI<LoadingUI>();
+
+        if (!result.Ok)
+        {
+            HandleFusionError(result.ShutdownReason, roomName);
+            return;
+        }
 
         if (mode == GameMode.Host)
         {
@@ -59,7 +68,34 @@ public class NetworkHandler : MonoBehaviour
         {
             ChessManager.Instance.SetPlayerTeam(Team.Black);
         }
+    }
 
-        UIManager.Instance.CloseUI<LoadingUI>();
+    private void HandleFusionError(ShutdownReason reason, string roomName)
+    {
+        string errorMessage = "Error! Please try again";
+
+        switch (reason)
+        {
+            case ShutdownReason.GameIdAlreadyExists:
+                errorMessage = $"Room has already exist";
+                break;
+
+            case ShutdownReason.GameIsFull:
+                errorMessage = $"Room is full";
+                break;
+
+            case ShutdownReason.GameNotFound:
+                errorMessage = $"Error Not Found Room";
+                break;
+        }
+
+        UIManager.Instance.OpenUI<HomeUI>();
+        NotiCanvas.Instance.ShowTutorialText(errorMessage, 2f);
+
+        if (_runner != null)
+        {
+            Destroy(_runner.gameObject);
+            _runner = null;
+        }
     }
 }
