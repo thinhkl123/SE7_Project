@@ -614,6 +614,12 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     {
         // Chạy trên máy Host nếu tự bản thân Host bị rớt mạng hoàn toàn khỏi internet
         // Hiện UI: "Bạn đã mất kết nối Internet. Trận đấu bị hủy."
+        if (GetPlayerTeam() == Team.None)
+            return;
+
+        if (UIManager.Instance.IsOpened<CanvasWin>() || UIManager.Instance.IsOpened<CanvasLose>())
+            return;
+
         NotiCanvas.Instance.ShowPopup("You lost connection to the Internet. The match is canceled.", true, false);
     }
 

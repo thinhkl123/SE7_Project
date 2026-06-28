@@ -127,6 +127,8 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
 
             disconnectedClientRef = player;
 
+            ChessManager.Instance.IsGameActive = false; // Tạm dừng game khi Client mất kết nối
+
             if (waitClientReconnectCoroutine != null) StopCoroutine(waitClientReconnectCoroutine);
             waitClientReconnectCoroutine = StartCoroutine(Co_HostWaitForClientReconnect(runner, player));
         }
@@ -171,6 +173,8 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
                 StopCoroutine(waitClientReconnectCoroutine);
                 waitClientReconnectCoroutine = null;
 
+                ChessManager.Instance.IsGameActive = true; // Tiếp tục trận đấu khi Client kết nối lại thành công
+
                 // Gửi RPC thông báo cho cả 2 bên tắt UI chờ đợi, tiếp tục trận đấu
                 ChessManager.Instance.RPC_NotifyReconnectSuccess();
             }
@@ -180,11 +184,11 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         //ấn quit button hoặc kết thúc game bình thường
-        if (shutdownReason == ShutdownReason.Ok)
-        {
-            Debug.Log("Shutdown bình thường: Người chơi chủ động thoát hoặc game kết thúc hợp lệ.");
-            return;
-        }
+        //if (shutdownReason == ShutdownReason.Ok)
+        //{
+        //    Debug.Log("Shutdown bình thường: Người chơi chủ động thoát hoặc game kết thúc hợp lệ.");
+        //    return;
+        //}
 
         // Lỗi mạng
         if (!runner.IsServer)
