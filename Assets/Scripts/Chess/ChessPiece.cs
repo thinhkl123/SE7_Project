@@ -1,4 +1,5 @@
-﻿using Fusion;
+﻿using DG.Tweening;
+using Fusion;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,13 +28,17 @@ public class ChessPiece : MonoBehaviour
         currentX = x;
         currentY = y;
 
+        Vector2 newPos = new Vector2(0, 0);
+
         if (ChessManager.Instance.GetPlayerTeam() == Team.White)
         {
-            this.GetComponent<RectTransform>().anchoredPosition = ChessBoard.Instance.GetCellPos(currentX, currentY);
+            newPos = ChessBoard.Instance.GetCellPos(currentX, currentY);
         }
         else
         {
-            this.GetComponent<RectTransform>().anchoredPosition = ChessBoard.Instance.GetCellPos(ChessBoard.Instance.BoardSize.x - 1 - currentX, ChessBoard.Instance.BoardSize.y - 1 - currentY);
+            newPos = ChessBoard.Instance.GetCellPos(ChessBoard.Instance.BoardSize.x - 1 - currentX, ChessBoard.Instance.BoardSize.y - 1 - currentY);
         }
+
+        this.GetComponent<RectTransform>().DOAnchorPos(newPos, 0.25f);
     }
 }
