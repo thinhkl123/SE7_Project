@@ -329,7 +329,10 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             }
         }
         ChessBoard.Instance.ClearHighlights();
-        movedPiecesThisTurn.Add(chessPieces[x + y * ChessBoard.Instance.BoardSize.x]);
+        if (chessPieces.Length > 4)
+        {
+            movedPiecesThisTurn.Add(chessPieces[x + y * ChessBoard.Instance.BoardSize.x]);
+        }
 
         if (capturedPiece != null)
         {

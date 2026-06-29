@@ -72,6 +72,19 @@ public class UnoManager : NetworkBehaviour
         });
     }
 
+    private void OnDisable()
+    {
+        DrawCardButton.onClick.RemoveListener(() =>
+        {
+            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+        });
+
+        QuitBtn.onClick.RemoveListener(() =>
+        {
+            ChessManager.Instance.PlayerPressQuitButton();
+        });
+    }
+
     public void SetIsReleasedCard(bool value)
     {
         if (Runner.IsServer)
@@ -238,17 +251,6 @@ public class UnoManager : NetworkBehaviour
             Vector3 targetPos = new(startX + i * spacing, 0, 0);
             card.DOLocalMove(targetPos, 0.25f);
             card.DOLocalRotate(Vector3.zero, 0.25f);
-
-            // Set canvas sorting ngay lập tức, không cần chờ animation
-            //Canvas canvas = card.GetComponent<Canvas>();
-            //if (canvas == null)
-            //{
-            //    canvas = card.gameObject.AddComponent<Canvas>();
-            //    card.gameObject.AddComponent<GraphicRaycaster>();
-            //}
-            //canvas.overrideSorting = true;
-            //int distanceFromMiddle = Mathf.Abs(i - middle);
-            //canvas.sortingOrder = count - distanceFromMiddle;
         }
     }
 
@@ -521,7 +523,7 @@ public class UnoManager : NetworkBehaviour
         RectTransform targetTf = playerTeam == ChessManager.Instance.GetPlayerTeam()
             ? MyCardTf : OpponentCardTf;
 
-        isDrawingMultiple = true; // ← bật flag trước khi rút
+        isDrawingMultiple = true; 
 
         for (int i = 0; i < count; i++)
         {
@@ -677,17 +679,19 @@ public class UnoManager : NetworkBehaviour
         IsResponseWindowOpen = true;
         PendingCard = cardData;
         PendingCardTeam = playerTeam;
-      
 
-        UpdateActiveCard();
-        Rpc_UpdateDrawCardButton();
+
+        DOVirtual.DelayedCall(0.4f, () =>
+        {
+            UpdateActiveCard();
+            Rpc_UpdateDrawCardButton();
+        });
     }
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_BlockCard(Team blockerTeam, UnoCardData blockCardData)
     {
         if (Runner.IsServer)
         {
-            IsResponseWindowOpen = false;
             ChessManager.Instance.turnStartTime =
                 Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
         }

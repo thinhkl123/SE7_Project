@@ -96,6 +96,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         }
 
         // Guard giống version cũ
+        if (UnoManager.Instance.IsResponseWindowOpen) return;
         if (!ChessManager.Instance.IsPlayerTurn()) return;
         if (UnoManager.Instance.IsPlayerReleasedCard()) return;
 
@@ -200,14 +201,14 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         }
         else
         {
-            // Giống version cũ: active nếu playable, không cần check turn
-            // ExecuteCard() đã có guard IsPlayerTurn() rồi
             CanClick = !windowOpen && IsPlayable(topCard);
         }
 
         Color tempColor = CardSprite.color;
         tempColor.a = CanClick ? 1f : 0.5f;
         CardSprite.color = tempColor;
+        transform.localScale = startScale;
+        transform.localPosition = new Vector3(transform.localPosition.x, 0f, transform.localPosition.z);
     }
     private bool IsPlayable(UnoCardData topCard)
     {
@@ -230,7 +231,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         }
         else
         {
-            if (cardData.CardColor == topCard.CardColor || cardData.Value == topCard.Value)
+            if (cardData.CardColor == topCard.CardColor || (cardData.Value == topCard.Value && cardData.CardType != (int)CardType.Add))
             {
                 return true;
             }
