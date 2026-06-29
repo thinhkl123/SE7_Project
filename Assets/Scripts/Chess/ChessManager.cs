@@ -1,9 +1,12 @@
-﻿using Fusion;
+﻿using DG.Tweening;
+using Fusion;
 using SoundManager;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChessManager : NetworkBehaviour, IPlayerJoined
 {
@@ -38,15 +41,26 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     [Networked] public bool IsGameActive { get; set; } = false;
     [Networked] public int TurnCount { get; set; }
 
+    //response 
+    [Networked] public float TurnTimeElapsedBeforeWindow { get; set; }
+    [Networked] public bool IsSkipUIShown { get; set; } = false;
+    [Networked] public bool IsSkipButtonPressed { get; set; } = false;
+
+    //track chess pieces that have moved 
+    // Track quân đã đi trong lượt hiện tại
+    private List<ChessPiece> movedPiecesThisTurn = new List<ChessPiece>();
+
     public bool IsGameActiveForPlayer()
     {
+        if (Runner == null) return false;
+
         if (!IsSpawned) return false;
 
         return IsGameActive;
     }
 
     [Header("Turn Timer Settings")]
-    public float timePerTurn = 30f; 
+    private float timePerTurn = 30f; 
     public TextMeshProUGUI timerText;
     [Networked] public float turnStartTime { get; set; }
 
@@ -84,12 +98,54 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         //turnStartTime = Runner.SimulationTime;
     }
 
+    //public override void FixedUpdateNetwork()
+    //{
+    //    if (!IsGameActive) return;
+
+    //    float elapsedTime = Runner.SimulationTime - turnStartTime;
+    //    float timeRemaining = timePerTurn - elapsedTime;
+
+    //    if (timeRemaining <= 0)
+    //    {
+    //        SwitchTurn();
+    //    }
+
+    //    //Debug.Log($"[FixedUpdateNetwork] Time Remaining: {timeRemaining}");
+    //}
+
+    //public override void Render()
+    //{
+    //    if (!IsGameActive) return;
+
+    //    //Time update
+    //    float elapsedTime = Runner.SimulationTime - turnStartTime;
+    //    float timeRemaining = Mathf.Max(0, timePerTurn - elapsedTime);
+
+    //    timerText.text = $"{(int)timeRemaining}s - {(Team)currentTurn}";
+
+    //    //Turn update
+    //    turnText.text = $"Turn: {TurnCount}";
+    //}
+
     public override void FixedUpdateNetwork()
     {
-        if (!IsGameActive) return;
+        if (!ChessManager.Instance.IsGameActive) return;
 
-        float elapsedTime = Runner.SimulationTime - turnStartTime;
-        float timeRemaining = timePerTurn - elapsedTime;
+        // Response window countdown — runs independently of turn timer
+        if (UnoManager.Instance.IsResponseWindowOpen)
+        {
+            if (!IsSkipUIShown)
+            {
+                Rpc_ShowSkipUI();
+                IsSkipUIShown = true;
+            }
+            float remaining = UnoManager.Instance.GetResponseWindowTimeRemaining();
+            if (remaining <= 0f && Runner.IsServer)
+            {
+                UnoManager.Instance.Rpc_ResolveCard(); // auto-resolve after 7s
+            }
+            return; // pause turn timer while window is open
+        }
 
         if (timeRemaining <= 10)
         {
@@ -100,27 +156,68 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             }
         }
 
+        if( IsSkipUIShown ) 
+        {
+            Rpc_HideSkipUI();
+            IsSkipUIShown = false;
+        }
+        float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
+        float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
+
         if (timeRemaining <= 0)
         {
-            SwitchTurn();
+            ChessManager.Instance.SwitchTurn();
         }
+    }
 
-        //Debug.Log($"[FixedUpdateNetwork] Time Remaining: {timeRemaining}");
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_ShowSkipUI()
+    {
+        ChessManager.Instance.IsSkipButtonPressed = false;
+        if (UnoManager.Instance.PendingCardTeam != myTeam )
+        {
+            UIManager.Instance.OpenUI<SkipResponseUI>();
+        }
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_HideSkipUI()
+    {
+        UIManager.Instance.CloseUI<SkipResponseUI>();
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_PressSkipUI()
+    {
+        if(Runner.IsServer)
+        {
+            if( !IsSkipButtonPressed )
+            {
+                Debug.Log("Press Skip Button");
+                IsSkipButtonPressed = true;
+                UnoManager.Instance.IsResponseWindowOpen = false;
+                UnoManager.Instance.Rpc_ResolveCard();
+            }
+        }
+        UIManager.Instance.CloseUI<SkipResponseUI>();
     }
 
     public override void Render()
     {
-        if (!IsGameActive) return;
+        if (!ChessManager.Instance.IsGameActive) return;
 
-        //Time update
-        float elapsedTime = Runner.SimulationTime - turnStartTime;
-        float timeRemaining = Mathf.Max(0, timePerTurn - elapsedTime);
+        if (UnoManager.Instance.IsResponseWindowOpen)
+        {
+            float remaining = UnoManager.Instance.GetResponseWindowTimeRemaining();
+            ChessManager.Instance.timerText.text = $"{(Team)((currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White)}: {(int)remaining}s to response"; ;
+            return;
+        }
 
-        timerText.text = $"{(int)timeRemaining}s - {(Team)currentTurn}";
-
-        //Turn update
+        float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
+        float timeRemaining = Mathf.Max(0, ChessManager.Instance.timePerTurn - elapsedTime);
+        ChessManager.Instance.timerText.text = $"{Mathf.Ceil(timeRemaining)}s - {(Team)currentTurn}";
         turnText.text = $"Turn: {TurnCount}";
     }
+
+
 
     public void SwitchTeam()
     {
@@ -155,6 +252,14 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             {
                 if (chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x].team == myTeam)
                 {
+                    ChessPiece selected = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
+
+                    // Nếu quân này đã đi rồi trong lượt này thì không cho chọn
+                    if (movedPiecesThisTurn.Contains(selected))
+                    {
+                        Debug.Log("Quân này đã đi rồi trong lượt này!");
+                        return;
+                    }
                     currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
                     SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
                     availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
@@ -179,6 +284,16 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                 {
                     if (chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x].team == myTeam)
                     {
+                        ChessPiece selected = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
+                        if (movedPiecesThisTurn.Contains(selected))
+                        {
+                            Debug.Log("Quân này đã đi rồi trong lượt này!");
+                            // Clear drag hiện tại vì click vào quân không hợp lệ
+                            currentlyDragging = null;
+                            availableMoves.Clear();
+                            ChessBoard.Instance.ClearHighlights();
+                            return;
+                        }
                         currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
                         SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
                         availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
@@ -197,9 +312,11 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     {
         ChessPiece cp = chessPieces[originalX + originalY * ChessBoard.Instance.BoardSize.x];
         SoundsManager.Instance.PlaySFX(SoundType.Unit_Move_Chess);
+        ChessPiece capturedPiece = null;
 
         if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
         {
+            capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
             ChessPiece capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
             SoundsManager.Instance.PlaySFX(SoundType.Unit_Attack_Chess);
 
@@ -237,16 +354,40 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             }
         }
         ChessBoard.Instance.ClearHighlights();
+        if (chessPieces.Length > 4)
+        {
+            movedPiecesThisTurn.Add(chessPieces[x + y * ChessBoard.Instance.BoardSize.x]);
+        }
+
+        if (capturedPiece != null)
+        {
+            if (capturedPiece.type == PieceType.King)
+            {
+                RPC_EndGameWin(cp.team == Team.White ? (int)Team.White : (int)Team.Black, "Đã bắt được vua đối phương!");
+            }
+        }    
 
         if (TurnCount - 1 <= 0)
         {
-            Debug.Log("Chuyển lượt!");
+            Debug.Log("Chuyển luợt!");
             SwitchTurn();
         }
         else
         {
-            Debug.Log($"Còn {TurnCount - 1} lượt nữa trước khi chuyển lượt!");
+            Debug.Log($"Còn {TurnCount - 1} nước nữa trước khi chuyển lượt!");
             SetTurnCount(TurnCount - 1);
+        }
+        // Làm mờ quân đã đi trong lượt này
+        foreach (var movedPiece in movedPiecesThisTurn)
+        {
+            Image renderer = movedPiece.GetComponent<Image>();
+            if (renderer != null)
+            {
+                Color c = renderer.color;
+                c.a = 0.8f; // Giảm alpha để làm mờ
+                renderer.color = c;
+
+            }
         }
     }
 
@@ -285,6 +426,19 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             UnoManager.Instance.SetIsReleasedCard(false);
             UnoManager.Instance.Rpc_UpdateDrawCardButton();
         }
+        foreach (var movedPiece in movedPiecesThisTurn)
+        {
+            Image renderer = movedPiece.GetComponent<Image>();
+            if (renderer != null)
+            {
+                Color c = renderer.color;
+                c.a = 1f;
+                renderer.color = c;
+
+            }
+        }
+        movedPiecesThisTurn.Clear();
+
     }
 
     private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)
@@ -306,7 +460,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         chessPieces[5] = SpawnSinglePiece(PieceType.Bishop, Team.White);
         chessPieces[6] = SpawnSinglePiece(PieceType.Knight, Team.White);
         chessPieces[7] = SpawnSinglePiece(PieceType.Rook, Team.White);
-        
+
         for (int i = 0; i < ChessBoard.Instance.BoardSize.x; i++)
         {
             chessPieces[i + ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Pawn, Team.White);
@@ -325,7 +479,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         {
             chessPieces[i + 6 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Pawn, Team.Black);
         }
-        
+
         for (int x = 0; x < ChessBoard.Instance.BoardSize.x; x++)
         {
             for (int y = 0; y < ChessBoard.Instance.BoardSize.x; y++)
@@ -354,6 +508,118 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         return cp;
     }
 
+    public void PlayerPressQuitButton()
+    {
+        Debug.Log("Người chơi chủ động nhấn thoát game.");
+
+        if (Runner.IsServer)
+        {
+            Host_HandlePlayerQuit(Runner.LocalPlayer);
+        }
+        else
+        {
+            RPC_ClientRequestQuit(Runner.LocalPlayer);
+        }
+    }
+
+    #region [RPCs] Điều phối giữa Host và Client
+
+    // Client gửi yêu cầu này lên Host báo rằng mình chủ động nhấn nút Quit
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ClientRequestQuit(PlayerRef quittingPlayer)
+    {
+        Debug.Log($"RPC: Client {quittingPlayer.PlayerId} chủ động xin hàng.");
+        Host_HandlePlayerQuit(quittingPlayer);
+    }
+
+    // Host gửi kết quả trận đấu cho Client còn lại khi có người bị xử thua
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_EndGameQuit(PlayerRef loserPlayer, string reason)
+    {
+        NotiCanvas.Instance.ClosePopup();
+
+        if (Runner.LocalPlayer == loserPlayer)
+        {
+            Debug.Log($"Bạn đã THUA do: {reason}");
+            UIManager.Instance.OpenUI<CanvasLose>();
+        }
+        else
+        {
+            Debug.Log($"Bạn đã THẮNG do: {reason}");
+            UIManager.Instance.OpenUI<CanvasWin>();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_EndGameWin(int team, string reason)
+    {
+        if ((int)GetPlayerTeam() != team)
+        {
+            Debug.Log($"Bạn đã THUA do: {reason}");
+            UIManager.Instance.OpenUI<CanvasLose>();
+        }
+        else
+        {
+            Debug.Log($"Bạn đã THẮNG do: {reason}");
+            UIManager.Instance.OpenUI<CanvasWin>();
+        }
+
+        StartCoroutine(Co_HostDelayShutdown());
+    }
+    #endregion
+
+    #region [Host Logic] Chỉ chạy trên máy Host
+
+    public void Host_HandlePlayerQuit(PlayerRef loserPlayer)
+    {
+        if (!Runner.IsServer) return;
+
+        RPC_EndGameQuit(loserPlayer, "Chủ động rời trận đấu (Đầu hàng)");
+
+        StartCoroutine(Co_HostDelayShutdown());
+    }
+
+    private IEnumerator Co_HostDelayShutdown()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        if (Runner != null)
+        {
+            Runner.Shutdown();
+        }
+    }
+
+    #endregion
+
+    #region [Local Logic] Chỉ hiển thị UI local trên máy từng người
+    public void Local_HandleHostDisconnected()
+    {
+        // Chạy trên máy Client khi nhận thấy Host sập mạng
+        // Hiện UI: "Host (Chủ phòng) đã mất mạng đột ngột. Trận đấu này bị HỦY!"
+        if (GetPlayerTeam() == Team.None)
+            return;
+
+        if (UIManager.Instance.IsOpened<CanvasWin>() || UIManager.Instance.IsOpened<CanvasLose>())
+            return;
+
+        NotiCanvas.Instance.ShowPopup("Host lost connection. The match is canceled.", true, false);
+    }
+
+    public void Local_HandleSelfHostDisconnected()
+    {
+        // Chạy trên máy Host nếu tự bản thân Host bị rớt mạng hoàn toàn khỏi internet
+        // Hiện UI: "Bạn đã mất kết nối Internet. Trận đấu bị hủy."
+        if (GetPlayerTeam() == Team.None)
+            return;
+
+        if (UIManager.Instance.IsOpened<CanvasWin>() || UIManager.Instance.IsOpened<CanvasLose>())
+            return;
+
+        NotiCanvas.Instance.ShowPopup("You lost connection to the Internet. The match is canceled.", true, false);
+    }
+
+    #endregion
+
     public void InitChessGame()
     {
         if (Runner.IsServer)
@@ -362,6 +628,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             IsGameActive = true;
             TurnCount = 0;
             this.turnStartTime = Runner.SimulationTime;
+            UnoManager.Instance.Rpc_UpdateDrawCardButton();
         }
     }
 
@@ -375,17 +642,20 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         {
             if (playerCount < 2)
             {
+                IsGameActive = false;
                 UIManager.Instance.OpenUI<LoadingUI>().ShowLoading("Waiting for opponent...", 0.5f);
             }
             else
             {
                 UIManager.Instance.CloseUI<LoadingUI>();
 
-                InitChessGame();
+                //InitChessGame();
 
                 UnoManager.Instance.InitializeDeck();
 
                 Debug.Log("Hai người chơi đã sẵn sàng. Trò chơi bắt đầu!");
+
+                DOVirtual.DelayedCall(2f, () => InitChessGame());
             }
         }
     }

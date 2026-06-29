@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using Fusion;
 using SoundManager;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ public class UnoManager : NetworkBehaviour
 
     [Header("Config")]
     public CardSO CardSO;
-    public int InitialHandSize = 7;
+    private int InitialHandSize = 6;
 
     [Header("Player Card List")]
     public UnoCard CardPrefab;
@@ -35,6 +35,7 @@ public class UnoManager : NetworkBehaviour
     public RectTransform DeckPoint;
     public Image TopCardImage;
     public Button DrawCardButton;
+    public Button QuitBtn;
 
     [Header("Runtime")]
     [Networked] public int CardNumber { get; set; }
@@ -49,11 +50,39 @@ public class UnoManager : NetworkBehaviour
     [Networked] public int NextCardID { get; set; }
     [Networked] public bool IsReleasedCard { get; set; } = false;
 
+
+    [Header("Response Window")]
+    [Networked] public bool IsResponseWindowOpen { get; set; } = false;
+    [Networked] public float ResponseWindowStartTime { get; set; }
+    [Networked] public UnoCardData PendingCard { get; set; }
+    [Networked] public Team PendingCardTeam { get; set; }
+
+    private const float ResponseWindowDuration = 7f;
+
+    private bool isDrawingMultiple = false;
     private void Start()
     {
         DrawCardButton.onClick.AddListener(() =>
         {
             Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+        });
+
+        QuitBtn.onClick.AddListener(() =>
+        {
+            ChessManager.Instance.PlayerPressQuitButton();
+        });
+    }
+
+    private void OnDisable()
+    {
+        DrawCardButton.onClick.RemoveListener(() =>
+        {
+            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+        });
+
+        QuitBtn.onClick.RemoveListener(() =>
+        {
+            ChessManager.Instance.PlayerPressQuitButton();
         });
     }
 
@@ -105,7 +134,7 @@ public class UnoManager : NetworkBehaviour
 
             InitHand();
         }
-            
+
     }
 
     private void InitHand()
@@ -125,7 +154,8 @@ public class UnoManager : NetworkBehaviour
             TopCard = CurrentDeck.Get(InitialHandSize * 2);
             NextCardID = InitialHandSize * 2 + 1;
 
-            Rpc_RenderCard();
+            //Rpc_RenderCard();
+            DOVirtual.DelayedCall(0.2f, () => Rpc_RenderCard());
         }
     }
 
@@ -147,8 +177,6 @@ public class UnoManager : NetworkBehaviour
         RenderAllCardList();
 
         RenderTopCard();
-        UpdateActiveCard();
-        Rpc_UpdateDrawCardButton();
     }
 
     private void RenderAllCardList()
@@ -188,6 +216,7 @@ public class UnoManager : NetworkBehaviour
 
             seq.AppendInterval(0.08f);
         }
+        seq.AppendInterval(0.3f);
         seq.OnComplete(() =>
         {
             if (ChessManager.Instance.GetPlayerTeam() == Team.White)
@@ -203,39 +232,26 @@ public class UnoManager : NetworkBehaviour
 
             RefreshHand(MyCardTf);
             RefreshHand(OpponentCardTf);
+            UpdateActiveCard();
+            Rpc_UpdateDrawCardButton();
         });
     }
 
     public void RefreshHand(Transform hand)
     {
         float spacing = 90f;
-
         int count = hand.childCount;
-
-        float totalWidth =
-            (count - 1) * spacing;
-
-        float startX =
-            -totalWidth / 2f;
+        float totalWidth = (count - 1) * spacing;
+        float startX = -totalWidth / 2f;
+        int middle = count / 2;
 
         for (int i = 0; i < count; i++)
         {
-            RectTransform card =
-                hand.GetChild(i)
-                    .GetComponent<RectTransform>();
+            RectTransform card = hand.GetChild(i).GetComponent<RectTransform>();
 
-            Vector3 targetPos =
-                new(startX + i * spacing, 0, 0);
-
-            card.DOLocalMove(
-                targetPos,
-                0.25f
-            );
-
-            card.DOLocalRotate(
-                Vector3.zero,
-                0.25f
-            );
+            Vector3 targetPos = new(startX + i * spacing, 0, 0);
+            card.DOLocalMove(targetPos, 0.25f);
+            card.DOLocalRotate(Vector3.zero, 0.25f);
         }
     }
 
@@ -262,7 +278,7 @@ public class UnoManager : NetworkBehaviour
         for (int i = 0; i < length; i++)
         {
             UnoCardData cardData = hand.Get(i);
-            if (cardData.ID != -1) 
+            if (cardData.ID != -1)
             {
                 UnoCard cardUI = parentTf.GetChild(i).GetComponent<UnoCard>();
                 cardUI.SetCardData(cardData, isOpponent);
@@ -279,20 +295,27 @@ public class UnoManager : NetworkBehaviour
     {
         UnoCard cardUI = Instantiate(CardPrefab, parentTf);
         cardUI.SetCardData(cardData, isOpponent);
+
         if (!isOpponent)
         {
             myCardList.Add(cardUI);
         }
 
-        // Set the card's initial position to the deck point
-        RectTransform cardRest = cardUI.GetComponent<RectTransform>();
-        cardRest.position = DeckPoint.position;
+        // Set vị trí khởi đầu ở DeckPoint
+        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+        cardRect.position = DeckPoint.position;
+        cardRect.localScale = Vector3.one;
+        cardRect.localRotation = Quaternion.identity;
 
-        // Scale and Rotation sure to be the same as other cards in hand
-        cardRest.localScale = Vector3.one;
-        cardRest.localRotation = Quaternion.identity;
-
-        RefreshHand(parentTf);
+        // Sorting bài ngay lập tức để tránh bị che bởi bài khác khi đang di chuyển
+        Canvas canvas = cardRect.GetComponent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = cardRect.gameObject.AddComponent<Canvas>();
+            cardRect.gameObject.AddComponent<GraphicRaycaster>();
+        }
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = parentTf.childCount; // Luôn ở trên cùng
     }
 
     private void RenderTopCard()
@@ -332,7 +355,16 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_UpdateDrawCardButton()
     {
+        Debug.Log($"IsPlayerTurn={ChessManager.Instance.IsPlayerTurn()} | " +
+          $"IsReleasedCard={IsReleasedCard} | " +
+          $"IsResponseWindowOpen={IsResponseWindowOpen}");
         if (ChessManager.Instance.IsPlayerTurn() == false)
+        {
+            DrawCardButton.interactable = false;
+            return;
+        }
+
+        if( IsResponseWindowOpen )
         {
             DrawCardButton.interactable = false;
             return;
@@ -362,25 +394,19 @@ public class UnoManager : NetworkBehaviour
         DrawCardButton.interactable = true;
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
         SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
 
         if (NextCardID > CardNumber - 1)
         {
+
             ShuffleCardDeckAgain();
-        }
-        
-        if (isOneTime)
-            DrawCardButton.interactable = false;
 
-        UnoCardData drawnCard = CurrentDeck.Get(NextCardID - 1);
+        UnoCardData drawnCard = CurrentDeck.Get(NextCardID);
 
-        if (Runner.IsServer)
-        {
-            NextCardID++;
-        }
+        NextCardID++;
 
         if (playerTeam == Team.White)
         {
@@ -392,12 +418,40 @@ public class UnoManager : NetworkBehaviour
             BlackHand.Set(BlackCardCount, drawnCard);
             BlackCardCount++;
         }
-        RenderAddCard(drawnCard, 
-            playerTeam == ChessManager.Instance.GetPlayerTeam() ? MyCardTf : OpponentCardTf,
+
+        Rpc_AddCardVisual(drawnCard, playerTeam);
+
+        if (!isDrawingMultiple)
+        {
+            ChessManager.Instance.SwitchTurn();
+        }
+    }
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_AddCardVisual(UnoCardData cardData, Team playerTeam)
+    {
+        RectTransform targetTf =
+            playerTeam == ChessManager.Instance.GetPlayerTeam()
+            ? MyCardTf
+            : OpponentCardTf;
+
+        RenderAddCard(cardData,
+            targetTf,
             playerTeam != ChessManager.Instance.GetPlayerTeam());
+
+        RefreshHand(targetTf);
         UpdateActiveCard();
     }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_PreviewCard(UnoCardData cardData)
+    {
+        // Chỉ update visual, không thay đổi state
+        Sprite cardSprite = CardSO.GetSprite((CardColor)cardData.CardColor, (CardType)cardData.CardType, cardData.Value);
 
+        Sequence seq = DOTween.Sequence();
+        seq.Append(TopCardImage.rectTransform.DOScaleX(0, 0.15f).SetEase(Ease.InBack));
+        seq.AppendCallback(() => TopCardImage.sprite = cardSprite);
+        seq.Append(TopCardImage.rectTransform.DOScaleX(1, 0.15f).SetEase(Ease.OutBack));
+    }
     private void ShuffleCardDeckAgain()
     {
         for (int i = ReleaseCardCount - 1; i > 0; i--)
@@ -417,11 +471,15 @@ public class UnoManager : NetworkBehaviour
         ReleaseCardCount = 0;
         NextCardID = 0;
     }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_RemoveCard(UnoCardData cardData, Team playerTeam)
+    {
+        RemoveCard(cardData, playerTeam);
+    }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ReleaseMoveCard(UnoCardData cardData, Team playerTeam, int count)
     {
-        RemoveCard(cardData, playerTeam);
         SetIsReleasedCard(true);
         ChessManager.Instance.SetTurnCount(count);
         SetTopCard(cardData);
@@ -430,12 +488,11 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ReleaseReverseCard(UnoCardData cardData, Team playerTeam)
     {
-        RemoveCard(cardData, playerTeam);
         SetIsReleasedCard(true);
         ReverserCard();
         ChessManager.Instance.SwitchTeam();
         ChessManager.Instance.SwitchTurn();
-        SetTopCard(TopCard);
+        SetTopCard(cardData);
     }
 
     private void ReverserCard()
@@ -459,8 +516,12 @@ public class UnoManager : NetworkBehaviour
 
     public void ReleaseChangeColorCard(UnoCardData cardData, Team playerTeam)
     {
-        RemoveCard(cardData, playerTeam);
-        UIManager.Instance.OpenUI<ChooseColorUI>();
+
+        // Chỉ mở UI cho người đã đánh card
+        if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
+        {
+            UIManager.Instance.OpenUI<ChooseColorUI>();
+        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
@@ -480,16 +541,28 @@ public class UnoManager : NetworkBehaviour
 
     public void ReleaseAddCard(UnoCardData cardData, Team playerTeam, int count)
     {
-        RemoveCard(cardData, playerTeam);
         SetIsReleasedCard(true);
         SetTopCard(cardData);
+
+        RectTransform targetTf = playerTeam == ChessManager.Instance.GetPlayerTeam()
+            ? MyCardTf : OpponentCardTf;
+
+        isDrawingMultiple = true; 
+
         for (int i = 0; i < count; i++)
         {
             Rpc_DrawCard(playerTeam, false);
         }
+
+        isDrawingMultiple = false; // tắt flag sau khi rút xong
+
+        // Switch turn 1 lần duy nhất sau khi rút đủ bài
+        ChessManager.Instance.SwitchTurn();
+
+        DOVirtual.DelayedCall(0.2f, () => RefreshHand(targetTf));
     }
 
-    private void RemoveCard(UnoCardData cardData, Team playerTeam)
+    public void RemoveCard(UnoCardData cardData, Team playerTeam, bool skipRefresh = false)
     {
         SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
 
@@ -534,28 +607,78 @@ public class UnoManager : NetworkBehaviour
             }
         }
 
-        RectTransform targetHandTf = playerTeam == ChessManager.Instance.GetPlayerTeam() ? MyCardTf : OpponentCardTf;
+        //RectTransform targetHandTf = ((int)ChessManager.Instance.GetPlayerTeam() == ChessManager.Instance.currentTurn) ? MyCardTf : OpponentCardTf;
 
-        foreach (Transform child in targetHandTf)
+        //foreach (Transform child in targetHandTf)
+        //{
+        //    UnoCard cardUI = child.GetComponent<UnoCard>();
+        //    if (cardUI.cardData.ID == cardData.ID)
+        //    {
+        //        cardUI.CanClick = false; // Disable interaction ngay lập tức
+        //        RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+        //        cardRect.SetParent(TopCardImage.transform.parent);
+
+        //        //Canvas canvas = cardRect.GetComponent<Canvas>();
+        //        //if (canvas == null)
+        //        //{
+        //        //    canvas = cardRect.gameObject.AddComponent<Canvas>();
+        //        //    cardRect.gameObject.AddComponent<GraphicRaycaster>();
+        //        //}
+        //        //canvas.overrideSorting = true;
+        //        //canvas.sortingOrder = 100; // Luôn ở trên cùng
+
+        //        cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f).SetEase(Ease.OutQuad).OnComplete(() =>
+        //        {
+        //            cardUI.DestroyCard();
+        //        });
+        //        break;
+        //    }
+        //}
+
+        //if (!skipRefresh)
+        //{
+        //    RefreshHand(targetHandTf);
+        //}
+
+        if (ChessManager.Instance.GetPlayerTeam() == playerTeam)
         {
-            UnoCard cardUI = child.GetComponent<UnoCard>();
-            if (cardUI.cardData.ID == cardData.ID)
+            foreach (Transform child in MyCardTf)
             {
-                // Move the card to the top card position before destroying
-                RectTransform cardRect = cardUI.GetComponent<RectTransform>();
-                cardRect.SetParent(TopCardImage.rectTransform.parent);
+                UnoCard cardUI = child.GetComponent<UnoCard>();
+                if (cardUI.cardData.ID == cardData.ID)
+                {
+                    cardUI.CanClick = false; // Disable interaction ngay lập tức
+                    RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+                    cardRect.SetParent(TopCardImage.transform.parent);
 
-                // Ensure the card is on top of the UI
-                cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f)
-                    .SetEase(Ease.OutQuad)
-                    .OnComplete(() =>
+                    cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f).SetEase(Ease.OutQuad).OnComplete(() =>
                     {
-                        cardUI.DestroyCard();                        
+                        cardUI.DestroyCard();
                     });
 
-                // After the card is destroyed, refresh the hand to update the positions of remaining cards
-                RefreshHand(targetHandTf);
-                break;
+                    if (!skipRefresh)
+                        DOVirtual.DelayedCall(0.2f, () => RefreshHand(MyCardTf)); // ← delay 0.2f
+                    break;
+                }
+            }
+        }
+        else
+        {
+            // Opponent cards là face-down, không match được ID
+            // Chỉ cần destroy 1 card bất kỳ để giảm số lượng hiển thị
+            if (OpponentCardTf.childCount > 0)
+            {
+                UnoCard cardUI = OpponentCardTf.GetChild(0).GetComponent<UnoCard>();
+                cardUI.CanClick = false; // Disable interaction ngay lập tức
+                RectTransform cardRect = cardUI.GetComponent<RectTransform>();
+                cardRect.SetParent(TopCardImage.transform.parent);
+
+                cardRect.DOMove(TopCardImage.rectTransform.position, 0.3f).SetEase(Ease.OutQuad).OnComplete(() =>
+                {
+                    cardUI.DestroyCard();
+                });
+                if (!skipRefresh)
+                    DOVirtual.DelayedCall(0.2f, () => RefreshHand(OpponentCardTf));
             }
         }
 
@@ -563,5 +686,96 @@ public class UnoManager : NetworkBehaviour
         {
             myCardList.RemoveAll(card => card.cardData.ID == cardData.ID);
         }
+    }
+
+    //response window methods   
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_OpenResponseWindow(UnoCardData cardData, Team playerTeam)
+    {
+        if (Runner.IsServer)
+        {
+            ResponseWindowStartTime = Runner.SimulationTime;
+            PendingCard = cardData;
+            PendingCardTeam = playerTeam;
+            ChessManager.Instance.TurnTimeElapsedBeforeWindow =
+                Runner.SimulationTime - ChessManager.Instance.turnStartTime;
+        }
+
+        // Set trực tiếp trên tất cả clients, không đợi sync
+        IsResponseWindowOpen = true;
+        PendingCard = cardData;
+        PendingCardTeam = playerTeam;
+
+
+        DOVirtual.DelayedCall(0.4f, () =>
+        {
+            UpdateActiveCard();
+            Rpc_UpdateDrawCardButton();
+        });
+    }
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_BlockCard(Team blockerTeam, UnoCardData blockCardData)
+    {
+        if (Runner.IsServer)
+        {
+            ChessManager.Instance.turnStartTime =
+                Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
+        }
+        SetIsReleasedCard(true);
+        IsResponseWindowOpen = false;
+        SetTopCardVisualOnly(blockCardData); // chỉ render, chưa update active
+        ChessManager.Instance.SwitchTurn(); // currentTurn đổi trước
+
+        // Delay nhỏ để đảm bảo SwitchTurn sync xong mới evaluate
+        DOVirtual.DelayedCall(0.4f, () =>
+        {
+            UpdateActiveCard();
+            Rpc_UpdateDrawCardButton();
+        });
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void Rpc_ResolveCard()
+    {
+        if (Runner.IsServer)
+        {
+            IsResponseWindowOpen = false;
+
+            // Resume turn timer from where it paused
+            ChessManager.Instance.turnStartTime =
+                Runner.SimulationTime - ChessManager.Instance.TurnTimeElapsedBeforeWindow;
+        }
+        IsResponseWindowOpen = false;
+        // Dispatch to the original card's effect
+        switch ((CardType)PendingCard.CardType)
+        {
+            case CardType.Move:
+                Rpc_ReleaseMoveCard(PendingCard, PendingCardTeam, PendingCard.Value);
+                break;
+            case CardType.Reverse:
+                Rpc_ReleaseReverseCard(PendingCard, PendingCardTeam);
+                break;
+            case CardType.ChangeColor:
+                ReleaseChangeColorCard(PendingCard, PendingCardTeam);
+                break;
+            case CardType.Add:
+                ReleaseAddCard(PendingCard, PendingCardTeam, PendingCard.Value);
+                break;
+            default:
+                Debug.LogWarning("Unhandled card type in ResolveCard");
+                break;
+        }
+    }
+
+    public float GetResponseWindowTimeRemaining()
+    {
+        if (!IsResponseWindowOpen) return 0f;
+        return Mathf.Max(0f, ResponseWindowDuration - (Runner.SimulationTime - ResponseWindowStartTime));
+    }
+
+    private void SetTopCardVisualOnly(UnoCardData cardData)
+    {
+        TopCard = cardData; // bỏ if (Runner.IsServer), cả hai phía đều set
+        RenderTopCard();
     }
 }

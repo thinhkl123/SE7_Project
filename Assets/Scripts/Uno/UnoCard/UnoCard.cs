@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using Fusion;
 using System;
 using UnityEngine;
@@ -11,7 +11,7 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     public Image CardSprite;
     public Sprite BackSprite;
 
-    public bool CanClick { get; private set; } = true;
+    public bool CanClick { get; set; } = true;
 
     private bool isOpponentCard;
     private Vector3 startScale;
@@ -39,69 +39,90 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         CardSprite.sprite = UnoManager.Instance.CardSO.GetSprite((CardColor)cardData.CardColor, (CardType)cardData.CardType, cardData.Value);
     }
 
+    //public void ExecuteCard()
+    //{
+    //    if (ChessManager.Instance.IsPlayerTurn() == false)
+    //    {
+    //        Debug.LogWarning("It's not the player's turn!");
+    //        return;
+    //    }
+
+    //    if (UnoManager.Instance.IsPlayerReleasedCard())
+    //    {
+    //        Debug.LogWarning("Player has already released a card this turn!");
+    //        return;
+    //    }
+
+    //    Team playerTeam = ChessManager.Instance.GetPlayerTeam();
+
+    //    switch ((CardType)cardData.CardType)
+    //    {
+    //        case CardType.Move:
+    //            ReleaseMoveCard(playerTeam, cardData.Value);
+
+    //            break;
+    //        case CardType.Reverse:
+    //            ReverseAllChessPiece(playerTeam);
+
+    //            break;
+    //        case CardType.ChangeColor:
+    //            ReleaseChangeColorCard(playerTeam);
+
+    //            break;
+    //        case CardType.Block:
+
+
+    //            break;
+    //        case CardType.Add:
+    //            ReleaseAddCard(playerTeam, cardData.Value);
+
+    //            break;
+    //        default:
+    //            Debug.LogWarning("Unknown card type!");
+    //            break;
+    //    }
+    //}
     public void ExecuteCard()
     {
-        if (ChessManager.Instance.IsPlayerTurn() == false)
-        {
-            Debug.LogWarning("It's not the player's turn!");
-            return;
-        }
-
-        if (UnoManager.Instance.IsPlayerReleasedCard())
-        {
-            Debug.LogWarning("Player has already released a card this turn!");
-            return;
-        }
-
         Team playerTeam = ChessManager.Instance.GetPlayerTeam();
 
-        switch ((CardType)cardData.CardType)
+        if ((CardType)cardData.CardType == CardType.Block)
         {
-            case CardType.Move:
-                ReleaseMoveCard(playerTeam, cardData.Value);
-
-                break;
-            case CardType.Reverse:
-                ReverseAllChessPiece(playerTeam);
-
-                break;
-            case CardType.ChangeColor:
-                ReleaseChangeColorCard(playerTeam);
-
-                break;
-            case CardType.Block:
-                
-
-                break;
-            case CardType.Add:
-                ReleaseAddCard(playerTeam, cardData.Value);
-
-                break;
-            default:
-                Debug.LogWarning("Unknown card type!");
-                break;
+            if (!UnoManager.Instance.IsResponseWindowOpen) return;
+            if (ChessManager.Instance.IsPlayerTurn()) return;
+            UnoManager.Instance.Rpc_RemoveCard(cardData, playerTeam);
+            UnoManager.Instance.Rpc_BlockCard(playerTeam, cardData);
+            return;
         }
-    }
 
-    private void ReleaseMoveCard(Team playerTeam, int count)
-    {
-        UnoManager.Instance.Rpc_ReleaseMoveCard(cardData, playerTeam, count);
-    }
+        // Guard giống version cũ
+        if (UnoManager.Instance.IsResponseWindowOpen) return;
+        if (!ChessManager.Instance.IsPlayerTurn()) return;
+        if (UnoManager.Instance.IsPlayerReleasedCard()) return;
 
-    private void ReverseAllChessPiece(Team playerTeam)
-    {
-        UnoManager.Instance.Rpc_ReleaseReverseCard(cardData, playerTeam);
+        UnoManager.Instance.Rpc_RemoveCard(cardData, playerTeam);
+        UnoManager.Instance.Rpc_PreviewCard(cardData);
+        UnoManager.Instance.Rpc_OpenResponseWindow(cardData, playerTeam);
     }
+    //public void ReleaseMoveCard(Team playerTeam, int count)
+    //{
+    //    UnoManager.Instance.Rpc_ReleaseMoveCard(cardData, playerTeam, count);
+    //}
 
-    public void ReleaseChangeColorCard(Team playerTeam)
-    {
-        UnoManager.Instance.ReleaseChangeColorCard(cardData, playerTeam);
-    }
+    //public void ReverseAllChessPiece(Team playerTeam)
+    //{
+    //    UnoManager.Instance.Rpc_ReleaseReverseCard(cardData, playerTeam);
+    //}
 
-    public void ReleaseAddCard(Team playerTeam, int cardCount)
-    {
-        UnoManager.Instance.ReleaseAddCard(cardData, playerTeam, cardCount);
-    }
+    //public void ReleaseChangeColorCard(Team playerTeam)
+    //{
+    //    UnoManager.Instance.ReleaseChangeColorCard(cardData, playerTeam);
+    //}
+
+    //public void ReleaseAddCard(Team playerTeam, int cardCount)
+    //{
+    //    UnoManager.Instance.ReleaseAddCard(cardData, playerTeam, cardCount);
+    //}
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -153,22 +174,42 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
         // Implement logic to remove the card from the player's hand and update the game state
     }
 
+    //internal void UpdateActiveState(UnoCardData topCard)
+    //{
+    //    if (IsPlayable(topCard))
+    //    {
+    //        CanClick = true;
+    //    }
+    //    else
+    //    {
+    //        CanClick = false;
+    //    }
+
+    //    Color tempColor = CardSprite.color;
+    //    tempColor.a = CanClick ? 1f : 0.5f;
+    //    CardSprite.color = tempColor;
+    //}
     internal void UpdateActiveState(UnoCardData topCard)
     {
-        if (IsPlayable(topCard))
+        bool windowOpen = UnoManager.Instance.IsResponseWindowOpen;
+        Team myTeam = ChessManager.Instance.GetPlayerTeam();
+        bool iAmResponder = windowOpen && (myTeam != UnoManager.Instance.PendingCardTeam);
+
+        if ((CardType)cardData.CardType == CardType.Block)
         {
-            CanClick = true;
+            CanClick = iAmResponder; // chỉ block card mới cần check responder
         }
         else
         {
-            CanClick = false;
+            CanClick = !windowOpen && IsPlayable(topCard);
         }
 
         Color tempColor = CardSprite.color;
         tempColor.a = CanClick ? 1f : 0.5f;
         CardSprite.color = tempColor;
+        transform.localScale = startScale;
+        transform.localPosition = new Vector3(transform.localPosition.x, 0f, transform.localPosition.z);
     }
-
     private bool IsPlayable(UnoCardData topCard)
     {
         if (cardData.CardColor == (int)CardColor.Black || topCard.CardColor == (int)CardColor.Black)
@@ -176,14 +217,30 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
             return true;
         }
 
-        if (cardData.CardColor == topCard.CardColor || cardData.Value == topCard.Value)
+
+        if (topCard.CardType == (int)CardType.Add)
         {
-            return true;
+            if(cardData.CardColor == topCard.CardColor || cardData.CardType == (int)CardType.Add) 
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {
-            return false;
+            if (cardData.CardColor == topCard.CardColor || (cardData.Value == topCard.Value && cardData.CardType != (int)CardType.Add))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
+
     }
 }
 
