@@ -354,6 +354,9 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_UpdateDrawCardButton()
     {
+        Debug.Log($"IsPlayerTurn={ChessManager.Instance.IsPlayerTurn()} | " +
+          $"IsReleasedCard={IsReleasedCard} | " +
+          $"IsResponseWindowOpen={IsResponseWindowOpen}");
         if (ChessManager.Instance.IsPlayerTurn() == false)
         {
             DrawCardButton.interactable = false;

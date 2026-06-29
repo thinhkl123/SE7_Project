@@ -636,6 +636,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             IsGameActive = true;
             TurnCount = 0;
             this.turnStartTime = Runner.SimulationTime;
+            UnoManager.Instance.Rpc_UpdateDrawCardButton();
         }
     }
 
