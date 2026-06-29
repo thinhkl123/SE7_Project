@@ -160,6 +160,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ShowSkipUI()
     {
+        ChessManager.Instance.IsSkipButtonPressed = false;
         if (UnoManager.Instance.PendingCardTeam != myTeam )
         {
             UIManager.Instance.OpenUI<SkipResponseUI>();
@@ -175,9 +176,13 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     {
         if(Runner.IsServer)
         {
-            IsSkipButtonPressed = true;
-            UnoManager.Instance.IsResponseWindowOpen = false;
-            UnoManager.Instance.Rpc_ResolveCard();
+            if( !IsSkipButtonPressed )
+            {
+                Debug.Log("Press Skip Button");
+                IsSkipButtonPressed = true;
+                UnoManager.Instance.IsResponseWindowOpen = false;
+                UnoManager.Instance.Rpc_ResolveCard();
+            }
         }
         UIManager.Instance.CloseUI<SkipResponseUI>();
     }

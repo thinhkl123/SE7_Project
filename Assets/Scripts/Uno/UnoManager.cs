@@ -393,32 +393,48 @@ public class UnoManager : NetworkBehaviour
         DrawCardButton.interactable = true;
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
-        if (NextCardID > CardNumber - 1) ShuffleCardDeckAgain();
+        if (NextCardID >= CardNumber)
+            ShuffleCardDeckAgain();
 
-        if (isOneTime) DrawCardButton.interactable = false;
+        UnoCardData drawnCard = CurrentDeck.Get(NextCardID);
 
-        UnoCardData drawnCard = CurrentDeck.Get(NextCardID - 1);
-        if (Runner.IsServer) NextCardID++;
+        NextCardID++;
 
-        if (playerTeam == Team.White) { WhiteHand.Set(WhiteCardCount, drawnCard); WhiteCardCount++; }
-        else { BlackHand.Set(BlackCardCount, drawnCard); BlackCardCount++; }
+        if (playerTeam == Team.White)
+        {
+            WhiteHand.Set(WhiteCardCount, drawnCard);
+            WhiteCardCount++;
+        }
+        else
+        {
+            BlackHand.Set(BlackCardCount, drawnCard);
+            BlackCardCount++;
+        }
 
-        RectTransform targetTf = playerTeam == ChessManager.Instance.GetPlayerTeam()
-            ? MyCardTf : OpponentCardTf;
+        Rpc_AddCardVisual(drawnCard, playerTeam);
 
-        RenderAddCard(drawnCard, targetTf, playerTeam != ChessManager.Instance.GetPlayerTeam());
-        UpdateActiveCard();
-
-        RefreshHand(targetTf);
-
-        // Chỉ switch turn nếu không phải đang rút nhiều lá
         if (!isDrawingMultiple)
         {
             ChessManager.Instance.SwitchTurn();
         }
+    }
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_AddCardVisual(UnoCardData cardData, Team playerTeam)
+    {
+        RectTransform targetTf =
+            playerTeam == ChessManager.Instance.GetPlayerTeam()
+            ? MyCardTf
+            : OpponentCardTf;
+
+        RenderAddCard(cardData,
+            targetTf,
+            playerTeam != ChessManager.Instance.GetPlayerTeam());
+
+        RefreshHand(targetTf);
+        UpdateActiveCard();
     }
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_PreviewCard(UnoCardData cardData)
