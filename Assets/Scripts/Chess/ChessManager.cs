@@ -1,12 +1,12 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using Fusion;
-using SoundManager;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using SoundManager;
 
 public class ChessManager : NetworkBehaviour, IPlayerJoined
 {
@@ -32,9 +32,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     private ChessPiece currentlyDragging;
     private List<Vector2Int> availableMoves = new List<Vector2Int>();
     private Team myTeam = Team.None;
-
-    // Countdown sound
-    private bool isPlayingCountdown = false;
 
     [Header("Networked Variables")]
     [Networked] public int currentTurn { get; set; }
@@ -62,6 +59,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     [Header("Turn Timer Settings")]
     private float timePerTurn = 30f; 
     public TextMeshProUGUI timerText;
+    private bool isPlayingCountdown = false;
     [Networked] public float turnStartTime { get; set; }
 
     [Header("Turn Settings")]
@@ -134,6 +132,14 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         // Response window countdown — runs independently of turn timer
         if (UnoManager.Instance.IsResponseWindowOpen)
         {
+            if (isPlayingCountdown)
+            {
+                isPlayingCountdown = false;
+                if (SoundsManager.Instance != null)
+                {
+                    SoundsManager.Instance.StopSFX();
+                }
+            }
             if (!IsSkipUIShown)
             {
                 Rpc_ShowSkipUI();
@@ -147,15 +153,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             return; // pause turn timer while window is open
         }
 
-        if (timeRemaining <= 10)
-        {
-            if (!isPlayingCountdown)
-            {
-                isPlayingCountdown = true;
-                SoundsManager.Instance.PlaySFX(SoundType.Countdown_Tick);
-            }
-        }
-
         if( IsSkipUIShown ) 
         {
             Rpc_HideSkipUI();
@@ -163,6 +160,18 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         }
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
+
+        if (timeRemaining <= 10f)
+        {
+            if (!isPlayingCountdown)
+            {
+                isPlayingCountdown = true;
+                if (SoundsManager.Instance != null)
+                {
+                    SoundsManager.Instance.PlaySFX(SoundType.Countdown_Tick);
+                }
+            }
+        }
 
         if (timeRemaining <= 0)
         {
@@ -261,7 +270,10 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                         return;
                     }
                     currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
-                    SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
+                    if (SoundsManager.Instance != null)
+                    {
+                        SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
+                    }
                     availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
                     // Thêm code để highlight các ô có thể đi ở đây
                     List<Vector2Int> showPos = new List<Vector2Int>(availableMoves);
@@ -295,7 +307,10 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                             return;
                         }
                         currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
-                        SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
+                        if (SoundsManager.Instance != null)
+                        {
+                            SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
+                        }
                         availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
                         // Thêm code để highlight các ô có thể đi ở đây
                         List<Vector2Int> showPos = new List<Vector2Int>(availableMoves);
@@ -311,31 +326,35 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     private void Rpc_MoveTo(int originalX, int originalY, int x, int y)
     {
         ChessPiece cp = chessPieces[originalX + originalY * ChessBoard.Instance.BoardSize.x];
-        SoundsManager.Instance.PlaySFX(SoundType.Unit_Move_Chess);
         ChessPiece capturedPiece = null;
 
         if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
         {
             capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
-            ChessPiece capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
-            SoundsManager.Instance.PlaySFX(SoundType.Unit_Attack_Chess);
 
             if (capturedPiece.type == PieceType.King)
             {
                 if (cp.team == myTeam)
                 {
-                    SoundsManager.Instance.PlaySFX(SoundType.Game_Win);
+                    if (SoundsManager.Instance != null) SoundsManager.Instance.PlaySFX(SoundType.Game_Win);
                     UIManager.Instance.OpenUI<CanvasWin>();
                 }
                 else
                 {
-                    SoundsManager.Instance.PlaySFX(SoundType.Game_Lose);
+                    if (SoundsManager.Instance != null) SoundsManager.Instance.PlaySFX(SoundType.Game_Lose);
                     UIManager.Instance.OpenUI<CanvasLose>();
                 }
-
+            }
+            else
+            {
+                if (SoundsManager.Instance != null) SoundsManager.Instance.PlaySFX(SoundType.Unit_Attack_Chess);
             }
 
             Destroy(capturedPiece.gameObject);
+        }
+        else
+        {
+            if (SoundsManager.Instance != null) SoundsManager.Instance.PlaySFX(SoundType.Unit_Move_Chess);
         }
 
         chessPieces[x + y * ChessBoard.Instance.BoardSize.x] = cp;
@@ -415,13 +434,23 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
 
     public void SwitchTurn()
     {
+        if (isPlayingCountdown)
+        {
+            isPlayingCountdown = false;
+            if (SoundsManager.Instance != null)
+            {
+                SoundsManager.Instance.StopSFX();
+            }
+        }
+        else
+        {
+            isPlayingCountdown = false;
+        }
         if (Runner.IsServer)
         {
             Debug.Log("Switching turn...");
             currentTurn = (currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White;
             turnStartTime = Runner.SimulationTime;
-            isPlayingCountdown = false;
-
             SetTurnCount(0);
             UnoManager.Instance.SetIsReleasedCard(false);
             UnoManager.Instance.Rpc_UpdateDrawCardButton();

@@ -1,8 +1,8 @@
 using Fusion;
-using SoundManager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using SoundManager;
 
 public class HomeUI : UICanvas
 {
@@ -22,7 +22,10 @@ public class HomeUI : UICanvas
 
     private void Start()
     {
-        //SoundsManager.Instance.PlayMusic(SoundType.BG_Music);
+        if (SoundsManager.Instance != null)
+        {
+            SoundsManager.Instance.PlayMusic(SoundType.BG_Music);
+        }
 
         HostBtn.onClick.AddListener(() =>
         {

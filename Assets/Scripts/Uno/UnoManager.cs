@@ -1,11 +1,11 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using Fusion;
-using SoundManager;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using SoundManager;
 
 public class UnoManager : NetworkBehaviour
 {
@@ -60,30 +60,306 @@ public class UnoManager : NetworkBehaviour
     private const float ResponseWindowDuration = 7f;
 
     private bool isDrawingMultiple = false;
+    private Button muteMusicBtn;
+    private Slider musicSlider;
+    private TextMeshProUGUI musicVolumeText;
+    private Button muteAllBtn;
+
     private void Start()
     {
-        DrawCardButton.onClick.AddListener(() =>
+        if (DrawCardButton != null)
         {
-            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
-        });
+            DrawCardButton.onClick.AddListener(OnDrawCardClicked);
+        }
 
-        QuitBtn.onClick.AddListener(() =>
+        if (QuitBtn != null)
         {
-            ChessManager.Instance.PlayerPressQuitButton();
-        });
+            QuitBtn.onClick.AddListener(OnQuitClicked);
+            CreateMuteButtons();
+        }
     }
 
     private void OnDisable()
     {
-        DrawCardButton.onClick.RemoveListener(() =>
+        if (DrawCardButton != null)
         {
-            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
-        });
+            DrawCardButton.onClick.RemoveListener(OnDrawCardClicked);
+        }
 
-        QuitBtn.onClick.RemoveListener(() =>
+        if (QuitBtn != null)
         {
-            ChessManager.Instance.PlayerPressQuitButton();
-        });
+            QuitBtn.onClick.RemoveListener(OnQuitClicked);
+        }
+    }
+
+    private void OnDrawCardClicked()
+    {
+        Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+    }
+
+    private void OnQuitClicked()
+    {
+        ChessManager.Instance.PlayerPressQuitButton();
+    }
+
+    private void CreateMuteButtons()
+    {
+        if (QuitBtn == null) return;
+
+        // Position calculations
+        RectTransform quitRect = QuitBtn.GetComponent<RectTransform>();
+        float width = quitRect.rect.width;
+        float spacing = 15f;
+        float offset = width + spacing;
+
+        // 1. Create Mute Music (Setting) Button next to QuitBtn
+        muteMusicBtn = Instantiate(QuitBtn, QuitBtn.transform.parent);
+        muteMusicBtn.name = "MuteMusicBtn";
+        muteMusicBtn.onClick.RemoveAllListeners();
+        muteMusicBtn.onClick.AddListener(OnMusicSettingClicked);
+
+        RectTransform musicRect = muteMusicBtn.GetComponent<RectTransform>();
+        musicRect.anchoredPosition = new Vector2(quitRect.anchoredPosition.x - offset, quitRect.anchoredPosition.y);
+
+        if (muteMusicBtn.transform.childCount > 0)
+        {
+            Image musicImg = muteMusicBtn.transform.GetChild(0).GetComponent<Image>();
+            if (musicImg != null) musicImg.gameObject.SetActive(false);
+        }
+
+        GameObject musicTextGo = new GameObject("Text");
+        musicTextGo.transform.SetParent(muteMusicBtn.transform, false);
+        var musicLabel = musicTextGo.AddComponent<TextMeshProUGUI>();
+        musicLabel.text = "MUSIC\nSETTING";
+        musicLabel.fontSize = 14;
+        musicLabel.alignment = TextAlignmentOptions.Center;
+        musicLabel.color = Color.white;
+
+        RectTransform musicTextRect = musicTextGo.GetComponent<RectTransform>();
+        musicTextRect.anchorMin = Vector2.zero;
+        musicTextRect.anchorMax = Vector2.one;
+        musicTextRect.sizeDelta = Vector2.zero;
+
+        // 2. Create Slider Container (Popup below MuteMusicBtn)
+        float sliderWidth = 200f;
+        GameObject sliderContainer = new GameObject("MusicVolumeSliderContainer");
+        sliderContainer.transform.SetParent(QuitBtn.transform.parent, false);
+        
+        RectTransform containerRect = sliderContainer.AddComponent<RectTransform>();
+        containerRect.anchorMin = quitRect.anchorMin;
+        containerRect.anchorMax = quitRect.anchorMax;
+        containerRect.pivot = quitRect.pivot;
+        // Position directly below MuteMusicBtn
+        containerRect.anchoredPosition = new Vector2(musicRect.anchoredPosition.x, quitRect.anchoredPosition.y - width - 10f);
+        containerRect.sizeDelta = new Vector2(sliderWidth, 60f);
+        sliderContainer.SetActive(false); // Hidden by default
+
+        // 3. Create Label Text inside container
+        GameObject labelObj = new GameObject("Label");
+        labelObj.transform.SetParent(sliderContainer.transform, false);
+        musicVolumeText = labelObj.AddComponent<TextMeshProUGUI>();
+        musicVolumeText.fontSize = 16;
+        musicVolumeText.alignment = TextAlignmentOptions.Center;
+        musicVolumeText.color = Color.white;
+        
+        RectTransform labelRect = labelObj.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0, 0.6f);
+        labelRect.anchorMax = new Vector2(1, 1);
+        labelRect.anchoredPosition = Vector2.zero;
+        labelRect.sizeDelta = Vector2.zero;
+
+        // 4. Create Slider root
+        GameObject sliderObj = new GameObject("Slider");
+        sliderObj.transform.SetParent(sliderContainer.transform, false);
+        
+        RectTransform sliderRect = sliderObj.AddComponent<RectTransform>();
+        sliderRect.anchorMin = new Vector2(0, 0.1f);
+        sliderRect.anchorMax = new Vector2(1, 0.5f);
+        sliderRect.anchoredPosition = Vector2.zero;
+        sliderRect.sizeDelta = Vector2.zero;
+
+        Slider slider = sliderObj.AddComponent<Slider>();
+
+        // 5. Create Slider Background
+        GameObject bgObj = new GameObject("Background");
+        bgObj.transform.SetParent(sliderObj.transform, false);
+        Image bgImage = bgObj.AddComponent<Image>();
+        bgImage.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+        
+        RectTransform bgRect = bgObj.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.sizeDelta = Vector2.zero;
+
+        // 6. Create Slider Fill Area
+        GameObject fillAreaObj = new GameObject("Fill Area");
+        fillAreaObj.transform.SetParent(sliderObj.transform, false);
+        
+        RectTransform fillAreaRect = fillAreaObj.AddComponent<RectTransform>();
+        fillAreaRect.anchorMin = Vector2.zero;
+        fillAreaRect.anchorMax = Vector2.one;
+        fillAreaRect.anchoredPosition = Vector2.zero;
+        fillAreaRect.sizeDelta = new Vector2(-10, 0);
+
+        // 7. Create Slider Fill
+        GameObject fillObj = new GameObject("Fill");
+        fillObj.transform.SetParent(fillAreaObj.transform, false);
+        Image fillImage = fillObj.AddComponent<Image>();
+        fillImage.color = Color.green;
+        
+        RectTransform fillRect = fillObj.GetComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.sizeDelta = Vector2.zero;
+
+        // 8. Create Slider Handle Slide Area
+        GameObject handleAreaObj = new GameObject("Handle Slide Area");
+        handleAreaObj.transform.SetParent(sliderObj.transform, false);
+        
+        RectTransform handleAreaRect = handleAreaObj.AddComponent<RectTransform>();
+        handleAreaRect.anchorMin = Vector2.zero;
+        handleAreaRect.anchorMax = Vector2.one;
+        handleAreaRect.sizeDelta = new Vector2(-20, 0);
+
+        // 9. Create Slider Handle
+        GameObject handleObj = new GameObject("Handle");
+        handleObj.transform.SetParent(handleAreaObj.transform, false);
+        Image handleImage = handleObj.AddComponent<Image>();
+        handleImage.color = Color.white;
+        
+        RectTransform handleRect = handleObj.GetComponent<RectTransform>();
+        handleRect.anchorMin = Vector2.zero;
+        handleRect.anchorMax = Vector2.one;
+        handleRect.sizeDelta = new Vector2(20, 0);
+
+        // Link Slider fields
+        slider.fillRect = fillRect;
+        slider.handleRect = handleRect;
+        slider.targetGraphic = handleImage;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f;
+        slider.maxValue = 100f;
+
+        float currentVol = 100f;
+        if (SoundsManager.Instance != null)
+        {
+            currentVol = SoundsManager.Instance.GetMusicVolume() * 100f;
+            if (SoundsManager.Instance.IsMusicMuted || SoundsManager.Instance.IsAllMuted)
+            {
+                currentVol = 0f;
+            }
+        }
+        slider.value = currentVol;
+        slider.onValueChanged.AddListener(OnMusicVolumeChanged);
+        musicSlider = slider;
+
+        // 10. Create Mute All Button next to MuteMusicBtn
+        muteAllBtn = Instantiate(QuitBtn, QuitBtn.transform.parent);
+        muteAllBtn.name = "MuteAllBtn";
+        muteAllBtn.onClick.RemoveAllListeners();
+        muteAllBtn.onClick.AddListener(OnMuteAllClicked);
+
+        RectTransform allRect = muteAllBtn.GetComponent<RectTransform>();
+        allRect.anchoredPosition = new Vector2(quitRect.anchoredPosition.x - 2 * offset, quitRect.anchoredPosition.y);
+
+        if (muteAllBtn.transform.childCount > 0)
+        {
+            Image allImg = muteAllBtn.transform.GetChild(0).GetComponent<Image>();
+            if (allImg != null) allImg.gameObject.SetActive(false);
+        }
+
+        GameObject allTextGo = new GameObject("Text");
+        allTextGo.transform.SetParent(muteAllBtn.transform, false);
+        var allTmp = allTextGo.AddComponent<TextMeshProUGUI>();
+        allTmp.fontSize = 20;
+        allTmp.alignment = TextAlignmentOptions.Center;
+        allTmp.color = Color.white;
+
+        RectTransform allTextRect = allTextGo.GetComponent<RectTransform>();
+        allTextRect.anchorMin = Vector2.zero;
+        allTextRect.anchorMax = Vector2.one;
+        allTextRect.sizeDelta = Vector2.zero;
+
+        // Initialize label values
+        UpdateMuteButtonLabels(allTmp);
+    }
+
+    private void OnMusicSettingClicked()
+    {
+        if (musicSlider != null && musicSlider.transform.parent != null)
+        {
+            GameObject container = musicSlider.transform.parent.gameObject;
+            container.SetActive(!container.activeSelf);
+        }
+    }
+
+    private void OnMusicVolumeChanged(float value)
+    {
+        if (SoundsManager.Instance != null)
+        {
+            if (value > 0f && SoundsManager.Instance.IsMusicMuted)
+            {
+                SoundsManager.Instance.ToggleMusicMute(); // Auto-unmute if sliding up
+            }
+            SoundsManager.Instance.SetMusicVolume(value / 100f);
+        }
+        UpdateVolumeLabel(value);
+    }
+
+    private void UpdateVolumeLabel(float value)
+    {
+        if (musicVolumeText != null)
+        {
+            if (SoundsManager.Instance != null && (SoundsManager.Instance.IsMusicMuted || SoundsManager.Instance.IsAllMuted))
+            {
+                musicVolumeText.text = "MUSIC: MUTED";
+                musicVolumeText.color = Color.red;
+            }
+            else
+            {
+                musicVolumeText.text = $"MUSIC: {(int)value}%";
+                musicVolumeText.color = Color.green;
+            }
+        }
+    }
+
+    private void OnMuteAllClicked()
+    {
+        if (SoundsManager.Instance != null)
+        {
+            SoundsManager.Instance.ToggleAllMute();
+            UpdateAllMuteLabels();
+        }
+    }
+
+    private void UpdateAllMuteLabels()
+    {
+        if (muteAllBtn == null) return;
+        var allTmp = muteAllBtn.transform.Find("Text")?.GetComponent<TextMeshProUGUI>();
+        UpdateMuteButtonLabels(allTmp);
+    }
+
+    private void UpdateMuteButtonLabels(TextMeshProUGUI allTmp)
+    {
+        if (SoundsManager.Instance == null) return;
+
+        bool isMuted = SoundsManager.Instance.IsMusicMuted || SoundsManager.Instance.IsAllMuted;
+        float currentVol = isMuted ? 0f : (SoundsManager.Instance.GetMusicVolume() * 100f);
+
+        if (musicSlider != null)
+        {
+            musicSlider.onValueChanged.RemoveListener(OnMusicVolumeChanged);
+            musicSlider.value = currentVol;
+            musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+        }
+
+        UpdateVolumeLabel(currentVol);
+
+        if (allTmp != null)
+        {
+            allTmp.text = SoundsManager.Instance.IsAllMuted ? "SOUND\nOFF" : "SOUND\nON";
+            allTmp.color = SoundsManager.Instance.IsAllMuted ? Color.red : Color.green;
+        }
     }
 
     public void SetIsReleasedCard(bool value)
@@ -397,11 +673,12 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
-        SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
-
-        if (NextCardID > CardNumber - 1)
+        if (SoundsManager.Instance != null)
         {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
+        }
 
+        if (NextCardID >= CardNumber)
             ShuffleCardDeckAgain();
 
         UnoCardData drawnCard = CurrentDeck.Get(NextCardID);
@@ -480,6 +757,10 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ReleaseMoveCard(UnoCardData cardData, Team playerTeam, int count)
     {
+        if (SoundsManager.Instance != null)
+        {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+        }
         SetIsReleasedCard(true);
         ChessManager.Instance.SetTurnCount(count);
         SetTopCard(cardData);
@@ -488,6 +769,10 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_ReleaseReverseCard(UnoCardData cardData, Team playerTeam)
     {
+        if (SoundsManager.Instance != null)
+        {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+        }
         SetIsReleasedCard(true);
         ReverserCard();
         ChessManager.Instance.SwitchTeam();
@@ -534,6 +819,10 @@ public class UnoManager : NetworkBehaviour
             CardColor = (int)newColor,
             Value = 0,
         };
+        if (SoundsManager.Instance != null)
+        {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+        }
         SetIsReleasedCard(true);
         SetTopCard(newTopCard);
         ChessManager.Instance.SwitchTurn();
@@ -564,7 +853,10 @@ public class UnoManager : NetworkBehaviour
 
     public void RemoveCard(UnoCardData cardData, Team playerTeam, bool skipRefresh = false)
     {
-        SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+        if (SoundsManager.Instance != null)
+        {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+        }
 
         if (Runner.IsServer)
         {
