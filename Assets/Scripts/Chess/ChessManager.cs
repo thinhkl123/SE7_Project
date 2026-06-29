@@ -505,26 +505,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         Host_HandlePlayerQuit(quittingPlayer);
     }
 
-    // Host gửi cho cả phòng thông báo đang đếm ngược chờ Reconnect
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_NotifyWaitingForReconnect(int secondsLeft)
-    {
-        // Hiển thị UI đếm ngược cho cả 2 bên thấy (nếu Client còn kết nối chập chờn)
-        Debug.Log($"Trận đấu tạm dừng. Chờ đối thủ kết nối lại: {secondsLeft}s");
-        // UI_Manager.ShowReconnectPopup(secondsLeft);
-        NotiCanvas.Instance.ShowPopup($"Opponent lost connection. Waiting for reconnect... {secondsLeft}s", false, false);
-    }
-
-    // Host gửi cho cả phòng báo Reconnect thành công, tiếp tục chơi
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_NotifyReconnectSuccess()
-    {
-        Debug.Log("Đối thủ đã quay lại! Tiếp tục ván cờ.");
-        NotiCanvas.Instance.ClosePopup();
-        NotiCanvas.Instance.ShowTutorialText("Opponent reconnected! Continue the match.", 3f);
-        // UI_Manager.HideReconnectPopup();
-    }
-
     // Host gửi kết quả trận đấu cho Client còn lại khi có người bị xử thua
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_EndGameQuit(PlayerRef loserPlayer, string reason)
@@ -582,24 +562,9 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         }
     }
 
-    public void Host_HandleClientReconnectTimeout(PlayerRef loserClientPlayer)
-    {
-        if (!Runner.IsServer) return;
-
-        // Hết giờ kết nối lại -> Client bị xử thua
-        RPC_EndGameQuit(loserClientPlayer, "Mất kết nối quá thời gian quy định");
-    }
-
     #endregion
 
     #region [Local Logic] Chỉ hiển thị UI local trên máy từng người
-
-    public void Local_ShowWaitingForClientUI(int secondsLeft)
-    {
-        // Gọi UI trên máy Host hiển thị: "Client mất mạng, đang chờ... X giây"
-        NotiCanvas.Instance.ShowPopup($"Client lost connection. Waiting for reconnect... {secondsLeft}s", false, false);
-    }
-
     public void Local_HandleHostDisconnected()
     {
         // Chạy trên máy Client khi nhận thấy Host sập mạng
