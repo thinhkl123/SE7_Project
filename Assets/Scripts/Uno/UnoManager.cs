@@ -1,5 +1,6 @@
 using DG.Tweening;
 using Fusion;
+using SoundManager;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using TMPro;
@@ -364,6 +365,8 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
+        SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
+
         if (NextCardID > CardNumber - 1)
         {
             ShuffleCardDeckAgain();
@@ -488,6 +491,8 @@ public class UnoManager : NetworkBehaviour
 
     private void RemoveCard(UnoCardData cardData, Team playerTeam)
     {
+        SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+
         if (Runner.IsServer)
         {
             ReleaseCardCount++;

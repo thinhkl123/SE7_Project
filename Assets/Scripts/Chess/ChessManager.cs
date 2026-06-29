@@ -1,4 +1,5 @@
 ﻿using Fusion;
+using SoundManager;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -28,6 +29,9 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     private ChessPiece currentlyDragging;
     private List<Vector2Int> availableMoves = new List<Vector2Int>();
     private Team myTeam = Team.None;
+
+    // Countdown sound
+    private bool isPlayingCountdown = false;
 
     [Header("Networked Variables")]
     [Networked] public int currentTurn { get; set; }
@@ -87,6 +91,15 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         float elapsedTime = Runner.SimulationTime - turnStartTime;
         float timeRemaining = timePerTurn - elapsedTime;
 
+        if (timeRemaining <= 10)
+        {
+            if (!isPlayingCountdown)
+            {
+                isPlayingCountdown = true;
+                SoundsManager.Instance.PlaySFX(SoundType.Countdown_Tick);
+            }
+        }
+
         if (timeRemaining <= 0)
         {
             SwitchTurn();
@@ -143,6 +156,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                 if (chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x].team == myTeam)
                 {
                     currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
+                    SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
                     availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
                     // Thêm code để highlight các ô có thể đi ở đây
                     List<Vector2Int> showPos = new List<Vector2Int>(availableMoves);
@@ -166,6 +180,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                     if (chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x].team == myTeam)
                     {
                         currentlyDragging = chessPieces[hitPosition.x + hitPosition.y * ChessBoard.Instance.BoardSize.x];
+                        SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
                         availableMoves = currentlyDragging.GetValidMoves(chessPieces, ChessBoard.Instance.BoardSize.x, ChessBoard.Instance.BoardSize.y);
                         // Thêm code để highlight các ô có thể đi ở đây
                         List<Vector2Int> showPos = new List<Vector2Int>(availableMoves);
@@ -181,19 +196,23 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     private void Rpc_MoveTo(int originalX, int originalY, int x, int y)
     {
         ChessPiece cp = chessPieces[originalX + originalY * ChessBoard.Instance.BoardSize.x];
+        SoundsManager.Instance.PlaySFX(SoundType.Unit_Move_Chess);
 
         if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
         {
             ChessPiece capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
+            SoundsManager.Instance.PlaySFX(SoundType.Unit_Attack_Chess);
 
             if (capturedPiece.type == PieceType.King)
             {
                 if (cp.team == myTeam)
                 {
+                    SoundsManager.Instance.PlaySFX(SoundType.Game_Win);
                     UIManager.Instance.OpenUI<CanvasWin>();
                 }
                 else
                 {
+                    SoundsManager.Instance.PlaySFX(SoundType.Game_Lose);
                     UIManager.Instance.OpenUI<CanvasLose>();
                 }
 
@@ -260,6 +279,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             Debug.Log("Switching turn...");
             currentTurn = (currentTurn == (int)Team.White) ? (int)Team.Black : (int)Team.White;
             turnStartTime = Runner.SimulationTime;
+            isPlayingCountdown = false;
+
             SetTurnCount(0);
             UnoManager.Instance.SetIsReleasedCard(false);
             UnoManager.Instance.Rpc_UpdateDrawCardButton();

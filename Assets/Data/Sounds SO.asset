@@ -27,7 +27,7 @@ MonoBehaviour:
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 7a3c8f98d8bdb9b49925268f87094fb8, type: 3}
+    - {fileID: 8300000, guid: 79f2488119f202a4bb6132d3d58162ba, type: 3}
   - name: Unit_Attack_Chess
     volume: 1
     mixer: {fileID: 0}
@@ -49,14 +49,14 @@ MonoBehaviour:
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: c9025248d7fa9ca45a579a0d71cc479e, type: 3}
+    - {fileID: 8300000, guid: 2bd15aae3b043c84ebb4d73cc986c6d8, type: 3}
   - name: Game_Win
     volume: 1
     mixer: {fileID: 0}
     sounds:
     - {fileID: 8300000, guid: 7719132bf9eb57848b03e2f97a777c0c, type: 3}
   - name: Game_Lose
-    volume: 1
+    volume: 0.14
     mixer: {fileID: 0}
     sounds:
     - {fileID: 8300000, guid: 2a8f4153886165d4386e46511ecb878d, type: 3}

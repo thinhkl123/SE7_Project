@@ -1,4 +1,5 @@
 using Fusion;
+using SoundManager;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,8 @@ public class HomeUI : UICanvas
 
     private void Start()
     {
+        //SoundsManager.Instance.PlayMusic(SoundType.BG_Music);
+
         HostBtn.onClick.AddListener(() =>
         {
             UIManager.Instance.CloseUI<HomeUI>();
