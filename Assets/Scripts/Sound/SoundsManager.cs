@@ -11,6 +11,7 @@ namespace SoundManager
         public SoundSO SO;
         public AudioSource musicSource;
         public AudioSource sfxSource;
+        public AudioSource countDownSource;
 
         private float musicVolume;
         private float sfxVolume;
@@ -89,6 +90,11 @@ namespace SoundManager
             }
         }
 
+        public void PlayCountDown()
+        {
+            countDownSource.Play();
+        }
+
         public void StopMusic()
         {
             musicSource.Stop();
@@ -97,6 +103,11 @@ namespace SoundManager
         public void StopSFX()
         {
             sfxSource.Stop();
+        }
+
+        public void StopCountDown()
+        {
+            countDownSource.Stop();
         }
     }
 

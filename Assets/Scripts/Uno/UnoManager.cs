@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusion;
+using SoundManager;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using TMPro;
@@ -396,6 +397,8 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
+        SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
+
         if (NextCardID >= CardNumber)
             ShuffleCardDeckAgain();
 

@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Fusion;
+using SoundManager;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     private ChessPiece currentlyDragging;
     private List<Vector2Int> availableMoves = new List<Vector2Int>();
     private Team myTeam = Team.None;
+    private bool IsPlayCountDownSound = false;
 
     [Header("Networked Variables")]
     [Networked] public int currentTurn { get; set; }
@@ -150,6 +152,20 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
 
+        if (timeRemaining <= 10f)
+        {
+            if (!IsPlayCountDownSound && IsPlayerTurn())
+            {
+                SoundsManager.Instance.PlayCountDown();
+                IsPlayCountDownSound = true;
+            }
+        }
+        else 
+        {
+            IsPlayCountDownSound = false;
+            SoundsManager.Instance.StopCountDown();
+        }
+
         if (timeRemaining <= 0)
         {
             ChessManager.Instance.SwitchTurn();
@@ -252,6 +268,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                     List<Vector2Int> showPos = new List<Vector2Int>(availableMoves);
                     showPos.Add(hitPosition);
                     ChessBoard.Instance.HighlightCells(showPos);
+
+                    SoundsManager.Instance.PlaySFX(SoundType.Unit_Select);
                 }
             }
         }
@@ -301,19 +319,21 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         {
             capturedPiece = chessPieces[x + y * ChessBoard.Instance.BoardSize.x];
 
-            if (capturedPiece.type == PieceType.King)
-            {
-                if (cp.team == myTeam)
-                {
-                    UIManager.Instance.OpenUI<CanvasWin>();
-                }
-                else
-                {
-                    UIManager.Instance.OpenUI<CanvasLose>();
-                }
+            //if (capturedPiece.type == PieceType.King)
+            //{
+            //    if (cp.team == myTeam)
+            //    {
+            //        SoundsManager.Instance.PlaySFX(SoundType.Game_Win);
+            //        UIManager.Instance.OpenUI<CanvasWin>();
+            //    }
+            //    else
+            //    {
+            //        SoundsManager.Instance.PlaySFX(SoundType.Game_Lose);
+            //        UIManager.Instance.OpenUI<CanvasLose>();
+            //    }
 
-            }
-
+            //}
+            SoundsManager.Instance.PlaySFX(SoundType.Unit_Attack_Chess);
             Destroy(capturedPiece.gameObject);
         }
 
@@ -518,11 +538,13 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         if (Runner.LocalPlayer == loserPlayer)
         {
             Debug.Log($"Bạn đã THUA do: {reason}");
+            SoundsManager.Instance.PlaySFX(SoundType.Game_Lose);
             UIManager.Instance.OpenUI<CanvasLose>();
         }
         else
         {
             Debug.Log($"Bạn đã THẮNG do: {reason}");
+            SoundsManager.Instance.PlaySFX(SoundType.Game_Win);
             UIManager.Instance.OpenUI<CanvasWin>();
         }
     }
@@ -533,11 +555,13 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         if ((int)GetPlayerTeam() != team)
         {
             Debug.Log($"Bạn đã THUA do: {reason}");
+            SoundsManager.Instance.PlaySFX(SoundType.Game_Lose);
             UIManager.Instance.OpenUI<CanvasLose>();
         }
         else
         {
             Debug.Log($"Bạn đã THẮNG do: {reason}");
+            SoundsManager.Instance.PlaySFX(SoundType.Game_Win);
             UIManager.Instance.OpenUI<CanvasWin>();
         }
 
