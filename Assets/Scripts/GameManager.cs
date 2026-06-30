@@ -1,6 +1,7 @@
 using UnityEngine;
 using CustomUtils;
 using System;
+using SoundManager;
 
 public class GameManager : SingletonMono<GameManager>
 {
@@ -13,6 +14,8 @@ public class GameManager : SingletonMono<GameManager>
     private void Start()
     {
         UIManager.Instance.OpenUI<HomeUI>();
+
+        SoundsManager.Instance.PlayMusic(SoundType.BG_Music);
     }
 
     private GameObject CreateObject(string module, string nameModule)
