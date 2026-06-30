@@ -22,7 +22,7 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
     private void Awake()
     {
         Instance = this;
-        CreateNetworkObject();
+        //CreateNetworkObject();
     }
 
     private NetworkRunner _runner;
@@ -45,7 +45,7 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
         _runner = runnerObj.AddComponent<NetworkRunner>();
         _runner.ProvideInput = true;
 
-        //CreateNetworkObject();
+        CreateNetworkObject();
 
         _runner.AddCallbacks(this);
 
