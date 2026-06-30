@@ -27,7 +27,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     public bool IsSpawned = false;
 
     //Private variables
-    private ChessPiece[] chessPieces = new ChessPiece[64];
+    [SerializeField] private ChessPiece[] chessPieces = new ChessPiece[64];
     private ChessPiece currentlyDragging;
     private List<Vector2Int> availableMoves = new List<Vector2Int>();
     private Team myTeam = Team.None;
@@ -42,9 +42,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
     [Networked] public bool IsSkipUIShown { get; set; } = false;
     [Networked] public bool IsSkipButtonPressed { get; set; } = false;
 
-    //track chess pieces that have moved 
     // Track quân đã đi trong lượt hiện tại
-    private List<ChessPiece> movedPiecesThisTurn = new List<ChessPiece>();
+    [SerializeField] private List<ChessPiece> movedPiecesThisTurn = new List<ChessPiece>();
 
     public bool IsGameActiveForPlayer()
     {
@@ -334,7 +333,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             }
         }
         ChessBoard.Instance.ClearHighlights();
-        if (chessPieces.Length > 4)
+        if (CountRemainingPieces() > 4)
         {
             movedPiecesThisTurn.Add(chessPieces[x + y * ChessBoard.Instance.BoardSize.x]);
         }
@@ -447,8 +446,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         chessPieces[7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Rook, Team.Black);
         chessPieces[1 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Knight, Team.Black);
         chessPieces[2 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Bishop, Team.Black);
-        chessPieces[3 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.King, Team.Black); 
-        chessPieces[4 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Queen, Team.Black);  
+        chessPieces[3 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Queen, Team.Black); 
+        chessPieces[4 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.King, Team.Black);  
         chessPieces[5 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Bishop, Team.Black);
         chessPieces[6 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Knight, Team.Black);
         chessPieces[7 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Rook, Team.Black);
@@ -636,5 +635,15 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
                 DOVirtual.DelayedCall(2f, () => InitChessGame());
             }
         }
+    }
+    //Đếm số quân còn lại
+    private int CountRemainingPieces()
+    {
+        int count = 0;
+        foreach (var piece in chessPieces)
+        {
+            if (piece != null && piece.team == myTeam) count++;
+        }
+        return count;
     }
 }
