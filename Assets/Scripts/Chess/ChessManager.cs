@@ -432,8 +432,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         chessPieces[0] = SpawnSinglePiece(PieceType.Rook, Team.White);
         chessPieces[1] = SpawnSinglePiece(PieceType.Knight, Team.White);
         chessPieces[2] = SpawnSinglePiece(PieceType.Bishop, Team.White);
-        chessPieces[3] = SpawnSinglePiece(PieceType.Queen, Team.White); 
-        chessPieces[4] = SpawnSinglePiece(PieceType.King, Team.White);  
+        chessPieces[3] = SpawnSinglePiece(PieceType.King, Team.White); 
+        chessPieces[4] = SpawnSinglePiece(PieceType.Queen, Team.White);  
         chessPieces[5] = SpawnSinglePiece(PieceType.Bishop, Team.White);
         chessPieces[6] = SpawnSinglePiece(PieceType.Knight, Team.White);
         chessPieces[7] = SpawnSinglePiece(PieceType.Rook, Team.White);
@@ -446,8 +446,8 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         chessPieces[7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Rook, Team.Black);
         chessPieces[1 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Knight, Team.Black);
         chessPieces[2 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Bishop, Team.Black);
-        chessPieces[3 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Queen, Team.Black); 
-        chessPieces[4 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.King, Team.Black);  
+        chessPieces[3 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.King, Team.Black); 
+        chessPieces[4 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Queen, Team.Black);  
         chessPieces[5 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Bishop, Team.Black);
         chessPieces[6 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Knight, Team.Black);
         chessPieces[7 + 7 * ChessBoard.Instance.BoardSize.x] = SpawnSinglePiece(PieceType.Rook, Team.Black);
