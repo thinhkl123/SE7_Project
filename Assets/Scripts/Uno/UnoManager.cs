@@ -64,7 +64,7 @@ public class UnoManager : NetworkBehaviour
     {
         DrawCardButton.onClick.AddListener(() =>
         {
-            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam(), true);
+            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam(), false, true);
         });
 
         QuitBtn.onClick.AddListener(() =>
