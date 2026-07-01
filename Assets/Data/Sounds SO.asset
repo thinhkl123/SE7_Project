@@ -51,12 +51,12 @@ MonoBehaviour:
     sounds:
     - {fileID: 8300000, guid: c9025248d7fa9ca45a579a0d71cc479e, type: 3}
   - name: Game_Win
-    volume: 1
+    volume: 0.85
     mixer: {fileID: 0}
     sounds:
     - {fileID: 8300000, guid: b614c0420f5ed5e4884eb6761303ebd9, type: 3}
   - name: Game_Lose
-    volume: 1
+    volume: 0.85
     mixer: {fileID: 0}
     sounds:
     - {fileID: 8300000, guid: df9e543d1ba07c541b83d6ea1e2141d1, type: 3}
