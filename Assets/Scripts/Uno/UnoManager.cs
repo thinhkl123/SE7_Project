@@ -151,7 +151,30 @@ public class UnoManager : NetworkBehaviour
         if (Runner.IsServer)
             TopCard = cardData;
 
-        RenderTopCard();
+        //RenderTopCard();
+
+        SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(
+            TopCardImage.rectTransform
+                .DOScaleX(0, 0.15f)
+                .SetEase(Ease.InBack)
+        );
+
+        seq.AppendCallback(() =>
+        {
+            Sprite cardSprite = CardSO.GetSprite((CardColor)cardData.CardColor, (CardType)cardData.CardType, cardData.Value);
+            TopCardImage.sprite = cardSprite;
+        });
+
+        seq.Append(
+            TopCardImage.rectTransform
+                .DOScaleX(1, 0.15f)
+                .SetEase(Ease.OutBack)
+        );
+
         UpdateActiveCard();
         Rpc_UpdateDrawCardButton();
     }
