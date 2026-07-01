@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sounds:
   - name: BG_Music
-    volume: 0.106
+    volume: 0.07
     mixer: {fileID: 0}
     sounds:
     - {fileID: 8300000, guid: 4936ed998137aca469316fdfbeb27265, type: 3}

@@ -73,12 +73,6 @@ public class UnoManager : NetworkBehaviour
         });
     }
 
-    private void OnDisable()
-    {
-        DrawCardButton.onClick.RemoveAllListeners();
-        QuitBtn.onClick.RemoveAllListeners();
-    }
-
     public void SetIsReleasedCard(bool value)
     {
         if (Runner.IsServer)
