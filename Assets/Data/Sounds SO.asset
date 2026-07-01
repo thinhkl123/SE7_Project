@@ -22,29 +22,29 @@ MonoBehaviour:
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 8ca8689b5ff02cf4eacc5220edffdc61, type: 3}
+    - {fileID: 8300000, guid: 4599f839036187b4e94acd9abeb22930, type: 3}
   - name: Unit_Move_Chess
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 7a3c8f98d8bdb9b49925268f87094fb8, type: 3}
+    - {fileID: 8300000, guid: 79c3adc6470f7684aaf39a93a8ebadb1, type: 3}
   - name: Unit_Attack_Chess
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 29bc7261a45619440bd11e171d6c5e96, type: 3}
+    - {fileID: 8300000, guid: c0ca2c45e735a034cadbbb79cc5e8a85, type: 3}
   - name: Card_Draw
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 1a0bf4622788adb409ea30ca3024eddc, type: 3}
+    - {fileID: 8300000, guid: 17cab1cccaa69a04f8a7476f0503ef59, type: 3}
   - name: Card_Play
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 2ea0bf091ca68a04daa0900379f084d4, type: 3}
-    - {fileID: 8300000, guid: ed2ca424e4e561c4c9468450ac74156d, type: 3}
-    - {fileID: 8300000, guid: 72ca272955e4e314ca4dee498732ed90, type: 3}
+    - {fileID: 8300000, guid: beb9066ce50d5f749a3c839c09467214, type: 3}
+    - {fileID: 8300000, guid: ac1f898c64a530a42bc50a3b4f5bc300, type: 3}
+    - {fileID: 8300000, guid: 3ed26716a9a09314a94f0f0d177b9233, type: 3}
   - name: Countdown_Tick
     volume: 1
     mixer: {fileID: 0}
@@ -54,9 +54,9 @@ MonoBehaviour:
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 7719132bf9eb57848b03e2f97a777c0c, type: 3}
+    - {fileID: 8300000, guid: b614c0420f5ed5e4884eb6761303ebd9, type: 3}
   - name: Game_Lose
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: 2a8f4153886165d4386e46511ecb878d, type: 3}
+    - {fileID: 8300000, guid: df9e543d1ba07c541b83d6ea1e2141d1, type: 3}
