@@ -165,10 +165,12 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             IsPlayCountDownSound = false;
             SoundsManager.Instance.StopCountDown();
         }
+        Debug.Log(IsPlayCountDownSound);
 
         if (timeRemaining <= 0)
         {
             ChessManager.Instance.SwitchTurn();
+            ChessBoard.Instance.ClearHighlights();
         }
     }
 
@@ -483,7 +485,7 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
             {
                 if (chessPieces[x + y * ChessBoard.Instance.BoardSize.x] != null)
                 {
-                    chessPieces[x + y * ChessBoard.Instance.BoardSize.x].SetPosition(x, y);
+                    chessPieces[x + y * ChessBoard.Instance.BoardSize.x].SetPosition(x, y, false);
                 }
             }
         }

@@ -64,6 +64,7 @@ public class UnoManager : NetworkBehaviour
     {
         DrawCardButton.onClick.AddListener(() =>
         {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
             Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
         });
 
@@ -75,15 +76,8 @@ public class UnoManager : NetworkBehaviour
 
     private void OnDisable()
     {
-        DrawCardButton.onClick.RemoveListener(() =>
-        {
-            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
-        });
-
-        QuitBtn.onClick.RemoveListener(() =>
-        {
-            ChessManager.Instance.PlayerPressQuitButton();
-        });
+        DrawCardButton.onClick.RemoveAllListeners();
+        QuitBtn.onClick.RemoveAllListeners();
     }
 
     public void SetIsReleasedCard(bool value)
@@ -397,8 +391,6 @@ public class UnoManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
     {
-        SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
-
         if (NextCardID >= CardNumber)
             ShuffleCardDeckAgain();
 
@@ -545,7 +537,9 @@ public class UnoManager : NetworkBehaviour
         RectTransform targetTf = playerTeam == ChessManager.Instance.GetPlayerTeam()
             ? MyCardTf : OpponentCardTf;
 
-        isDrawingMultiple = true; 
+        isDrawingMultiple = true;
+
+        SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
 
         for (int i = 0; i < count; i++)
         {

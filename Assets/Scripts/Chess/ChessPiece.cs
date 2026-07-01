@@ -24,9 +24,10 @@ public class ChessPiece : MonoBehaviour
         return moves;
     }
 
-    public void SetPosition(int x, int y)
+    public void SetPosition(int x, int y, bool isPlaySound = true)
     {
-        SoundsManager.Instance.PlaySFX(SoundType.Unit_Move_Chess);
+        if (isPlaySound)
+            SoundsManager.Instance.PlaySFX(SoundType.Unit_Move_Chess);
 
         currentX = x;
         currentY = y;

@@ -1,8 +1,9 @@
+using CustomUtils;
 using SoundManager;
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
-using CustomUtils;
 
 namespace SoundManager
 {
@@ -92,6 +93,11 @@ namespace SoundManager
 
         public void PlayCountDown()
         {
+            SoundList soundList = SO.sounds[(int)SoundType.Countdown_Tick];
+            AudioClip[] clips = soundList.sounds;
+            AudioClip randomClip = clips[UnityEngine.Random.Range(0, clips.Length)];
+
+            countDownSource.clip = randomClip;
             countDownSource.Play();
         }
 
