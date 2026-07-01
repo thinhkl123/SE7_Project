@@ -152,21 +152,6 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         float elapsedTime = Runner.SimulationTime - ChessManager.Instance.turnStartTime;
         float timeRemaining = ChessManager.Instance.timePerTurn - elapsedTime;
 
-        if (timeRemaining <= 10f)
-        {
-            if (!IsPlayCountDownSound && IsPlayerTurn())
-            {
-                SoundsManager.Instance.PlayCountDown();
-                IsPlayCountDownSound = true;
-            }
-        }
-        else 
-        {
-            IsPlayCountDownSound = false;
-            SoundsManager.Instance.StopCountDown();
-        }
-        Debug.Log(IsPlayCountDownSound);
-
         if (timeRemaining <= 0)
         {
             ChessManager.Instance.SwitchTurn();
@@ -219,6 +204,21 @@ public class ChessManager : NetworkBehaviour, IPlayerJoined
         float timeRemaining = Mathf.Max(0, ChessManager.Instance.timePerTurn - elapsedTime);
         ChessManager.Instance.timerText.text = $"{Mathf.Ceil(timeRemaining)}s - {(Team)currentTurn}";
         turnText.text = $"Turn: {TurnCount}";
+
+        if (ChessManager.Instance.timePerTurn - elapsedTime <= 10f)
+        {
+            if (!IsPlayCountDownSound && IsPlayerTurn())
+            {
+                SoundsManager.Instance.PlayCountDown();
+                IsPlayCountDownSound = true;
+            }
+        }
+        else
+        {
+            IsPlayCountDownSound = false;
+            SoundsManager.Instance.StopCountDown();
+        }
+        //Debug.Log(IsPlayCountDownSound);
     }
 
 
