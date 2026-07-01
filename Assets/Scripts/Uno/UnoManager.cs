@@ -64,8 +64,7 @@ public class UnoManager : NetworkBehaviour
     {
         DrawCardButton.onClick.AddListener(() =>
         {
-            SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
-            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam());
+            Rpc_DrawCard(ChessManager.Instance.GetPlayerTeam(), true);
         });
 
         QuitBtn.onClick.AddListener(() =>
@@ -314,6 +313,8 @@ public class UnoManager : NetworkBehaviour
 
     private void RenderTopCard()
     {
+        SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
+
         Sequence seq = DOTween.Sequence();
 
         seq.Append(
@@ -389,8 +390,13 @@ public class UnoManager : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true)
+    public void Rpc_DrawCard(Team playerTeam, bool isOneTime = true, bool isPlaySound = false)
     {
+        if (isPlaySound)
+        {
+            SoundsManager.Instance.PlaySFX(SoundType.Card_Draw);
+        }
+
         if (NextCardID >= CardNumber)
             ShuffleCardDeckAgain();
 
@@ -543,7 +549,10 @@ public class UnoManager : NetworkBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            Rpc_DrawCard(playerTeam, false);
+            if (i == 0)
+                Rpc_DrawCard(playerTeam, false, true);
+            else
+                Rpc_DrawCard(playerTeam, false);
         }
 
         isDrawingMultiple = false; // tắt flag sau khi rút xong

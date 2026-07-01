@@ -85,8 +85,6 @@ public class UnoCard : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler
     //}
     public void ExecuteCard()
     {
-        SoundsManager.Instance.PlaySFX(SoundType.Card_Play);
-
         Team playerTeam = ChessManager.Instance.GetPlayerTeam();
 
         if ((CardType)cardData.CardType == CardType.Block)
