@@ -49,7 +49,7 @@ MonoBehaviour:
     volume: 1
     mixer: {fileID: 0}
     sounds:
-    - {fileID: 8300000, guid: c9025248d7fa9ca45a579a0d71cc479e, type: 3}
+    - {fileID: 8300000, guid: dfd1b82c18c9edc4d89d0e2edda94df7, type: 3}
   - name: Game_Win
     volume: 0.85
     mixer: {fileID: 0}
