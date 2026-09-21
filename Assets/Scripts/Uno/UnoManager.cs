@@ -2,8 +2,6 @@
 using Fusion;
 using SoundManager;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 

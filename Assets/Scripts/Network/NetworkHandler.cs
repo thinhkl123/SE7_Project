@@ -1,8 +1,6 @@
-﻿using CustomUtils;
-using Fusion;
+﻿using Fusion;
 using Fusion.Sockets;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,15 +12,9 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
     public List<GameObject> NetworkObjList;
     public List<Transform> NetworkObjParentList;
 
-    [SerializeField] private float clientReconnectTimeout = 30f; // Thời gian chờ Client kết nối lại
-
-    private Coroutine waitClientReconnectCoroutine;
-    private PlayerRef disconnectedClientRef;
-
     private void Awake()
     {
         Instance = this;
-        //CreateNetworkObject();
     }
 
     private NetworkRunner _runner;
@@ -92,7 +84,6 @@ public class NetworkHandler : MonoBehaviour, INetworkRunnerCallbacks
             if (NetworkObjList[i] != null)
             {
                 GameObject obj = Instantiate(NetworkObjList[i], NetworkObjParentList[i]);
-                //DontDestroyOnLoad(obj);
             }
         }
     }
